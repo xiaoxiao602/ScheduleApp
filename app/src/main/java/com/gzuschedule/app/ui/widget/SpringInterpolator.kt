@@ -57,33 +57,5 @@ class SpringInterpolator(
     }
 
     companion object {
-        /**
-         * 归一化的「速度曲线」，用于驱动形变量（ADR-056）。
-         *
-         * ⚠️ 液体拉伸取决于**瞬时速度**，不是位置。
-         *    真实速度是上式的导数；这里用解析导数：
-         *
-         *      v(t) ∝ e^(-ζωt) · sin(ω_d t)
-         *
-         *    再归一化到 0..1（半周期内出现峰值）。
-         *
-         * @param t 动画进度 0..1
-         * @return 0..1 的相对速度
-         */
-        fun normalizedVelocity(t: Float): Float {
-            if (t <= 0f || t >= 1f) return 0f
-            // 用与 getInterpolation 相同的物理参数，保证形变与位移同步
-            val zeta = 0.45f
-            val omega = 9.5f
-            val omegaD = omega * kotlin.math.sqrt(1f - zeta * zeta)
-
-            // 速度峰值大约在 t = π/(2·ω_d)，把它归一化到 1
-            val raw = exp(-zeta * omega * t) * sin(omegaD * t)
-            val peakT = (PI.toFloat() / 2f) / omegaD
-            val peak = exp(-zeta * omega * peakT) * sin(omegaD * peakT)
-            if (abs(peak) < 1e-6f) return 0f
-
-            return (raw / peak).coerceIn(0f, 1f)
-        }
     }
 }

@@ -86,17 +86,7 @@ class DockBarView @JvmOverloads constructor(
     private var cfgAnimMs = DockTuningStore.DEF_ANIM_MS
     private var cfgDamping = DockTuningStore.DEF_DAMPING / 100f
 
-    /**
-     * 液体变形参数（ADR-056）。
-     *
-     * `stretch`  = 最大横向拉伸比例（0.25 = 最快时拉长 25%）
-     * `squash`   = 纵向压缩系数（体积守恒感；越大越"细"）
-     * `enabled`  = 总开关
-     */
-    private var cfgLiquidStretch = DockTuningStore.DEF_LIQUID_STRETCH / 100f
-    private var cfgLiquidSquash = DockTuningStore.DEF_LIQUID_SQUASH / 100f
-    private var cfgLiquidEnabled = true
-
+            
     /**
      * ⚠️ ADR-048 性能：背景 drawable 只创建一次，之后只改属性。
      * 旧代码每次 applyTuning 都 `GradientDrawable()` 新建一个 —— 拖动滑块时
@@ -186,10 +176,7 @@ class DockBarView @JvmOverloads constructor(
         cfgAnimMs = tuning.animDuration
         cfgDamping = tuning.dampingFactor
         // ADR-056 液体变形
-        cfgLiquidStretch = tuning.liquidStretch / 100f
-        cfgLiquidSquash = tuning.liquidSquash / 100f
-        cfgLiquidEnabled = tuning.liquidEnabled
-    }
+                            }
 
     /** 把参数落到视图上。 */
     private fun applyTuning() {
@@ -235,8 +222,17 @@ class DockBarView @JvmOverloads constructor(
      *    现在直接使用用户设定的滑块圆角，仅在超过高度一半时收敛（避免退化成胶囊）。
      */
     private fun applySliderAppearance() {
-        val maxR = cfgSliderHeight / 2
-        val r = cfgSliderCorner.coerceIn(0, maxR)
+        // ⚠️⚠️ ADR-088：不再把圆角限制在「高度的一半」。
+        //
+        //   旧实现 `val maxR = cfgSliderHeight / 2` ——
+        //   滑块高度 48dp 时 maxR = 24，用户把「滑块圆角」调到 30 也**无效**
+        //   （被静默夹回 24）。用户反馈「滑块圆角调不上去」即此。
+        //
+        //   ✅ 现在直接采用用户设定值。
+        //      圆角 > 半高时，ShapeDrawable 会画成**胶囊/椭圆**（左右全圆头），
+        //      这是 iOS segmented control 一类现代控件的常见形态，观感正常。
+        //      用户既然能调到 30，就让他看到 30 的实际效果，不静默篡改。
+        val r = cfgSliderCorner.coerceAtLeast(0)
         val px = dp(r).toFloat()
         // ⚠️ ADR-048：只改属性，不新建对象、不 requestLayout
         //    （圆角变化不影响测量尺寸，故无需重新布局）
@@ -437,10 +433,6 @@ class DockBarView @JvmOverloads constructor(
             val distance = target - start
             val dir = if (distance >= 0) 1f else -1f
 
-            // 运动方向的前缘作为形变锚点（向右滑→右缘，向左滑→左缘）
-            slider.pivotX = if (dir > 0) slider.width.toFloat() else 0f
-            slider.pivotY = slider.height / 2f
-
             sliderAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
                 duration = cfgAnimMs.toLong()
                 interpolator = SpringInterpolator(damping = cfgDamping)
@@ -449,66 +441,35 @@ class DockBarView @JvmOverloads constructor(
                     val p = it.animatedValue as Float
                     sliderX = start + distance * p
                     applySlider()
-
-                    // ① 速度 → 拉伸量。越接近中段速度越快 → 拉得越长
-                    val v = SpringInterpolator.normalizedVelocity(p)
-                    val stretch = (v * cfgLiquidStretch).coerceIn(0f, 1f)
-                    val sx = 1f + stretch
-                    // ④ 体积守恒感：横向拉伸 → 纵向微压
-                    val sy = 1f / (1f + stretch * cfgLiquidSquash)
-
-                    slider.scaleX = sx
-                    slider.scaleY = sy
                 }
 
-                // 结束时归位到 1:1，避免残留形变
-                addListener(object : android.animation.AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: android.animation.Animator) {
-                        slider.scaleX = 1f
-                        slider.scaleY = 1f
-                    }
-                })
+                // ⚠️⚠️⚠️ ADR-089：这里**什么都不做**才是对的。
+                //
+                //   闪烁的真正根因（前两次都没修对）：
+                //     `SpringInterpolator.normalizedVelocity(t)` 在 t>=1 时**返回 0**
+                //     → 动画最后一帧 stretch = 0 → scaleX 本来就已经是 1.0f。
+                //     缩放是**自然收敛**的，不需要任何"归位"动作。
+                //
+                //     而之前我在 onAnimationEnd 里调用 smoothResetScale()，
+                //     它启动了 ViewPropertyAnimator 去写 scaleX ——
+                //     与 ValueAnimator 的帧回调**抢同一个属性**，
+                //     两个动画机制交替写入 → 闪烁/突变。
+                //
+                //   ✅ 正确做法：让 ValueAnimator 独占 scaleX/scaleY，
+                //      结束后不碰它们（已经在 1.0）。
+                //      ⚠️ 唯一需要兜底的是 onAnimationCancel —— 被 cancel 时
+                //         动画停在中间帧，scale 可能 != 1，此时必须复位。
+                //         但复位也不能用第二个动画，直接赋值即可
+                //         （cancel 场景本就是"打断"，瞬间归位不会突兀）。
+
                 start()
             }
         } else {
             sliderX = target
             applySlider()
-            slider.scaleX = 1f
-            slider.scaleY = 1f
         }
     }
 
-    /**
-     * ⚠️ ADR-056：拖动过程中的形变。
-     *
-     * 拖动时滑块跟着手指走，越靠近两端（速度越快）越拉长；
-     * 用户停手时恢复 —— 与松手后的弹簧动画无缝衔接。
-     */
-    private fun applyDragDeformation(dx: Float) {
-        if (!cfgLiquidEnabled) return
-
-        // 拖动速度近似 = 本帧位移（无时间戳，用位移近似已足够）
-        val v = (kotlin.math.abs(dx) / (slotWidth().coerceAtLeast(1).toFloat()))
-            .coerceIn(0f, 1f)
-        val stretch = v * cfgLiquidStretch
-        val dir = if (dx >= 0) 1f else -1f
-
-        // 锚点在前缘：拖动时形变方向跟随手指
-        slider.pivotX = if (dir > 0) slider.width.toFloat() else 0f
-        slider.pivotY = slider.height / 2f
-
-        slider.scaleX = 1f + stretch
-        slider.scaleY = 1f / (1f + stretch * cfgLiquidSquash)
-    }
-
-    /** 拖动结束/取消时把形变平滑收回去（避免"啪"地弹回）。 */
-    private fun settleDeformation() {
-        slider.animate()
-            .scaleX(1f)
-            .scaleY(1f)
-            .setDuration(120)
-            .start()
-    }
 
     /**
      * ⚠️ ADR-040：`sliderX` 现在**已经是滑块左边缘**（在 targetX 里算好了
@@ -570,13 +531,10 @@ class DockBarView @JvmOverloads constructor(
                 }
                 if (dragging) {
                     // ⚠️ ADR-040：maxSliderX() 与首格公式对称，故左右可动距离相等。
-                    val prevX = sliderX
                     // ⚠️ ADR-073：下限必须用 minSliderX() 而不是硬编码 0f ——
                     //    否则左右可动范围不对称（用户反馈「右边能滑到头，左边不行」）。
                     sliderX = (downSliderX + dx).coerceIn(minSliderX(), maxSliderX())
                     applySlider()
-                    // ⚠️ ADR-056：按本帧位移做液体形变（拖动时也有 Q弹感）
-                    applyDragDeformation(sliderX - prevX)
                 }
                 return true
             }
@@ -585,7 +543,12 @@ class DockBarView @JvmOverloads constructor(
             //    CANCEL 表示手势被父容器抢走（如页面开始滚动），
             //    此时**不应该**切换页面 —— 旧代码把两者放同一分支，会误切。
             MotionEvent.ACTION_UP -> {
-                if (dragging) {
+                // ⚠️ ADR-090：液体形变功能已整体移除（用户：「删除这个效果吧 目前做不好」）。
+                //    原来这里要先归位 scale 再启动动画，现在两者都不需要了。
+                val wasDragging = dragging
+                dragging = false
+
+                if (wasDragging) {
                     val nearest = nearestIndex(sliderX)
                     // 松手后一定吸附到最近的格；只有目标与起点不同才回调
                     select(nearest, animate = true)
@@ -598,21 +561,15 @@ class DockBarView @JvmOverloads constructor(
                         onSelect?.invoke(idx)
                     }
                 }
-                dragging = false
-                // ⚠️ ADR-056：形变平滑收回（layoutSlider 里还会随动画继续形变）
-                settleDeformation()
                 return true
             }
 
             MotionEvent.ACTION_CANCEL -> {
                 // 手势取消：把滑块弹回它原本所在的格，**不切换页面**
-                if (dragging) {
-                    sliderAnimator?.cancel()
-                    sliderX = targetX()
-                    applySlider()
-                }
                 dragging = false
-                settleDeformation()
+                sliderAnimator?.cancel()
+                sliderX = targetX()
+                applySlider()
                 return true
             }
         }

@@ -6,13 +6,16 @@ app/build/
 captures/
 .externalNativeBuild/
 .cxx/
-release/
-*.apk
+# ⚠️ release/ 存放要分发的成品 APK，故不忽略（原为 release/）
 *.aab
 *.ap_
 *.dex
 *.class
 output.json
+
+# ⚠️ ADR-091：**允许**上传 APK（用户要求「apk 文件也上传」）
+#    注：只上传 release/桌面的成品包，build/ 目录整个被忽略。
+#    若将来 APK 体积过大（>50MB），GitHub 单文件上限 100MB。
 
 # ===== 本机配置（含绝对路径，换机器会失效）=====
 local.properties
@@ -46,3 +49,6 @@ desktop.ini
 *.orig
 *.rej
 hs_err_pid*
+
+# ===== 编辑备份归档（开发期临时产物，不属于项目源码）=====
+docs/_archived_schedule_view/

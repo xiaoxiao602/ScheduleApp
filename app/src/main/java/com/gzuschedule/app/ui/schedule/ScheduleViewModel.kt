@@ -88,6 +88,27 @@ class ScheduleViewModel(
     /** 用户手动切换的周次（null = 跟随「当前周」自动计算）。 */
     private val manualWeek = MutableStateFlow<Int?>(null)
 
+    /**
+     * 「学期基准重读」触发器（ADR-087）。
+     *
+     * ⚠️⚠️ 为什么需要它：
+     *   用户在设置页改了「第一周星期一」后，本 ViewModel 的 state 不会自动更新 ——
+     *   因为 observeData() 只在 courses / term / manualWeek 变化时重新收集，
+     *   而 firstMonday 是在 collect **内部**从 DB 现读的。
+     *   → 结果：改了学期起始日，周次和卡片日期都不变，必须重启 App。
+     *
+     *   ✅ 用一个自增计数触发 combine 重新发射 → 重新读 DB → state 更新 → 重绘。
+     */
+    private val semesterReloadTick = kotlinx.coroutines.flow.MutableStateFlow(0)
+
+    /**
+     * 让 ViewModel 重新读取「第一周星期一」等学期基准并重算周次。
+     * 由 Fragment 在页面重新显示时调用（见 ScheduleFragment.reloadAppearanceIfChanged）。
+     */
+    fun refreshSemesterBase() {
+        semesterReloadTick.value += 1
+    }
+
     init {
         observeData()
     }
@@ -113,6 +134,10 @@ class ScheduleViewModel(
                 .combine(manualWeek) { (courses, term), manual ->
                     Triple(courses, term, manual)
                 }
+                // ⚠️ ADR-087：把「重读触发器」也并入 combine ——
+                //    设置页改完「第一周星期一」后触发，让下面 collect 重新执行，
+                //    从而重新读 DB 的 FIRST_MONDAY 并重算周次。
+                .combine(semesterReloadTick) { triple, _ -> triple }
                 .collect { (courses, term, manual) ->
                     // ⚠️ 元数据在 collect 里读 —— 同步后 meta 也会变，
                     //    重新读才能拿到新的学期名/第一周周一/假日。

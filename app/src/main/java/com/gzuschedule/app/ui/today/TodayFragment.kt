@@ -202,6 +202,10 @@ class TodayFragment : Fragment() {
         super.onHiddenChanged(hidden)
         if (!hidden) {
             refreshHeaderAvatar()
+            // ⚠️ ADR-087：用户在设置页可能改了「第一周星期一」，
+            //    那会影响「今天」页判定"今天是第几周的第几节课"。
+            //    show/hide 切回来时也让 ViewModel 重读学期基准。
+            viewModel.refreshSemesterBase()
         }
     }
 

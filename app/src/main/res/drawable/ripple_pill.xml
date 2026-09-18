@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  圆角矩形水波纹（ADR-086）—— 用于「第 N 周」和「回到本周」。
+
+  ⚠️ 用**圆角矩形**而不是圆形：
+     这两个是"文字按钮"，M3 里文字按钮的 ripple 跟随其形状（圆角矩形）。
+     圆形 ripple 用在文字上会显得奇怪（像单选按钮）。
+
+  ⚠️ 圆角半径 20dp ≈ 按钮高度(40dp)的一半 → 胶囊形，
+     与整条切换条的胶囊外观一致。
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+</ripple>

@@ -389,39 +389,6 @@
                 android:valueFrom="100"
                 android:valueTo="250" />
 
-            <!-- 液体变形：拉伸量 -->
-            <TextView
-                android:id="@+id/tvLiquidStretchLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:textSize="13sp"
-                tools:text="液体拉伸 · 22%" />
-
-            <com.google.android.material.slider.Slider
-                android:id="@+id/sliderLiquidStretch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:stepSize="1"
-                android:valueFrom="0"
-                android:valueTo="60" />
-
-            <!-- 液体变形：压缩量 -->
-            <TextView
-                android:id="@+id/tvLiquidSquashLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="13sp"
-                tools:text="液体压缩 · 30%" />
-
-            <com.google.android.material.slider.Slider
-                android:id="@+id/sliderLiquidSquash"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:stepSize="1"
-                android:valueFrom="0"
-                android:valueTo="80" />
-
             <!-- 恢复默认 -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDockReset"

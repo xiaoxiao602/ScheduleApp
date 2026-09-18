@@ -501,7 +501,10 @@ class ScheduleFragment : Fragment() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { bottomMargin = dp(10) }
-            radius = dp(14).toFloat()
+            // ⚠️ ADR-085：14 → 18dp（用户要求「课程卡片的圆角加大一点点」）。
+            //    与 dimens_cards.xml 的 card_corner_medium(20dp) 接近，
+            //    但略小 —— 课表卡片密集排列，圆角太大反而显得松散。
+            radius = dp(18).toFloat()
             cardElevation = 0f
 
             setContentPadding(0, 0, 0, 0)
@@ -719,17 +722,35 @@ class ScheduleFragment : Fragment() {
      *      · [onResume]        —— 从别的 Activity 返回时触发
      *      两者都会调 [reloadAppearanceIfChanged]，任一场景都能刷新。
      */
+    /**
+     * 重新加载「外观 + 学期基准」，必要时重绘（ADR-087）。
+     *
+     * ⚠️⚠️ 本方法修两个"改了不生效"的 bug：
+     *
+     *   ① 样式/颜色指纹比对（ADR-070 遗留）
+     *      → 用户在「课程外观」页可能只改某门课颜色（样式没动），
+     *        那时也必须重绘。用"自定义色指纹"判断。
+     *
+     *   ② **第一周星期一变更**（本轮用户反馈「改第一周首页不会动态刷新」）
+     *      之前只比对 cardStyle / colorStamp，**完全没管 firstMonday**。
+     *      用户在设置页改了学期起始日 → 周次、每张卡片的日期全部要重算，
+     *      但本方法认为"什么都没变" → 不重绘 → 必须重启 App 才更新。
+     *
+     *      ✅ 现在把 firstMonday 也纳入指纹；且因为它影响**周次计算**，
+     *         变了就必须让 ViewModel 重新读库（不只是重绘）。
+     */
     private fun reloadAppearanceIfChanged() {
         if (!::cardStyleStore.isInitialized) return
 
         val latest = cardStyleStore.style
-        // ⚠️ 光比样式不够 —— 用户在「课程外观」页可能只改了**某门课的颜色**
-        //    （样式没动），那时也必须重绘，否则自定义色不生效。
-        //    这里用"自定义色指纹"判断：把所有自定义色拼成一个字符串比较。
         val latestColorStamp = (viewModel.state.value.courses)
             .mapNotNull { c -> cardStyleStore.customColorOf(c.name)?.let { "${c.name}=$it" } }
             .sorted()
             .joinToString("|")
+
+        // ⚠️ 第一周星期一由 ViewModel 从 DB 读，可能已被设置页改过。
+        //    这里让 ViewModel 重新加载一次（它会重新读 FIRST_MONDAY 并重算周次）。
+        viewModel.refreshSemesterBase()
 
         if (latest != cardStyle || latestColorStamp != colorStamp) {
             cardStyle = latest

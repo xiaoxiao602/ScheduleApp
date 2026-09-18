@@ -23,6 +23,7 @@ import com.gzuschedule.app.data.local.UserProfileStore
 import com.gzuschedule.app.ui.widget.ProfileEditDialog
 import com.gzuschedule.app.data.local.CardStyleStore
 import com.gzuschedule.app.ui.color.CourseColorActivity
+import com.gzuschedule.app.ui.widget.MessageDialog
 import com.gzuschedule.app.ui.widget.SettingsRow
 import com.gzuschedule.app.data.local.entity.MetaEntity
 import com.gzuschedule.app.domain.TimeFormats
@@ -144,9 +145,9 @@ class SettingsFragment : Fragment() {
         val ok = UserProfileStore.saveAvatar(requireContext(), uri.toString())
         if (ok) {
             renderProfile()
-            Snackbar.make(binding.root, "头像已更新", Snackbar.LENGTH_SHORT).show()
+            MessageDialog.toast(requireContext(), "头像已更新")
         } else {
-            Snackbar.make(binding.root, "头像保存失败，请换一张试试", Snackbar.LENGTH_LONG).show()
+            MessageDialog.show(requireContext(), "保存失败", "头像没能保存成功，请换一张图片再试。")
         }
     }
 
@@ -226,7 +227,7 @@ class SettingsFragment : Fragment() {
                 // ⚠️ renderProfileAsync 是 suspend —— 弹窗回调不是协程上下文，
                 //    必须起一个再调。
                 viewLifecycleOwner.lifecycleScope.launch { renderProfileAsync() }
-                Snackbar.make(binding.root, "已恢复姓氏头像", Snackbar.LENGTH_SHORT).show()
+                MessageDialog.toast(requireContext(), "已恢复姓氏头像")
             },
         )
     }
@@ -270,15 +271,16 @@ class SettingsFragment : Fragment() {
                                 ),
                             )
                             renderFirstMonday()
-                            Snackbar.make(
-                                binding.root,
+                            // ⚠️ ADR-087：Snackbar → 圆角弹窗（用户：「底部这个提示太丑了」）
+                            MessageDialog.show(
+                                ctx,
+                                if (picked == monday) "第一周起始日已更新" else "已归到该周周一",
                                 if (picked == monday) {
-                                    "已设为 $monday"
+                                    "学期第一周星期一：$monday\n（周次与卡片日期已重新计算）"
                                 } else {
-                                    "已归到该周周一：$monday"
+                                    "你选的 $picked 不是周一，已自动归到当周周一：$monday"
                                 },
-                                Snackbar.LENGTH_LONG,
-                            ).show()
+                            )
                         }
                     },
                     current.year, current.monthValue - 1, current.dayOfMonth,
@@ -512,15 +514,6 @@ class SettingsFragment : Fragment() {
                 { store.dampingOvershoot }, { store.dampingOvershoot = it },
                 { "阻尼回弹 · ${"%.2f".format(it / 100f)}" },
                 { DockTuningStore.MIN_DAMPING }, { DockTuningStore.MAX_DAMPING }),
-            // ⚠️ ADR-056 液体变形（用户：「模仿液体的变形效果 比较 q弹」）
-            Row(b.sliderLiquidStretch, b.tvLiquidStretchLabel,
-                { store.liquidStretch }, { store.liquidStretch = it },
-                { if (it == 0) "液体拉伸 · 关闭" else "液体拉伸 · ${it}%" },
-                { DockTuningStore.MIN_LIQUID_STRETCH }, { DockTuningStore.MAX_LIQUID_STRETCH }),
-            Row(b.sliderLiquidSquash, b.tvLiquidSquashLabel,
-                { store.liquidSquash }, { store.liquidSquash = it },
-                { "液体压缩 · ${it}%" },
-                { DockTuningStore.MIN_LIQUID_SQUASH }, { DockTuningStore.MAX_LIQUID_SQUASH }),
         )
 
         /**
@@ -576,7 +569,7 @@ class SettingsFragment : Fragment() {
             store.resetAll()
             renderFromStore()
             applyToDock(store)
-            Snackbar.make(binding.root, "已恢复默认外观", Snackbar.LENGTH_SHORT).show()
+            MessageDialog.toast(requireContext(), "已恢复默认外观")
         }
     }
 

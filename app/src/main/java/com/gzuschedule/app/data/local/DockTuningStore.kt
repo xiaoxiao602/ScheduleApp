@@ -132,39 +132,6 @@ class DockTuningStore(context: Context) {
     val dampingFactor: Float
         get() = dampingOvershoot / 100f
 
-    // ---------- 液体变形（ADR-056）----------
-
-    /**
-     * 最大横向拉伸（×100，即百分数）。
-     *
-     * ⚠️ 用户要求：「滑块在拖动的时候会模仿液体的变形效果 比较 q弹」。
-     *    0 = 关闭变形；30 = 最快时拉长 30%。
-     */
-    var liquidStretch: Int
-        get() = sp.getInt(KEY_LIQUID_STRETCH, DEF_LIQUID_STRETCH)
-            .coerceIn(MIN_LIQUID_STRETCH, MAX_LIQUID_STRETCH)
-        set(v) = sp.edit()
-            .putInt(KEY_LIQUID_STRETCH, v.coerceIn(MIN_LIQUID_STRETCH, MAX_LIQUID_STRETCH))
-            .apply()
-
-    /**
-     * 纵向压缩系数（×100）。
-     *
-     * 横向拉伸时纵向按此比例压缩 —— 模拟液体被拉长后变细，
-     * 是「Q弹」而非「橡皮筋」的关键。0 = 不压缩（像橡皮筋）。
-     */
-    var liquidSquash: Int
-        get() = sp.getInt(KEY_LIQUID_SQUASH, DEF_LIQUID_SQUASH)
-            .coerceIn(MIN_LIQUID_SQUASH, MAX_LIQUID_SQUASH)
-        set(v) = sp.edit()
-            .putInt(KEY_LIQUID_SQUASH, v.coerceIn(MIN_LIQUID_SQUASH, MAX_LIQUID_SQUASH))
-            .apply()
-
-    /** 液体变形总开关。 */
-    var liquidEnabled: Boolean
-        get() = sp.getBoolean(KEY_LIQUID_ENABLED, true)
-        set(v) = sp.edit().putBoolean(KEY_LIQUID_ENABLED, v).apply()
-
     /** 恢复全部默认值。 */
     fun resetAll() {
         sp.edit().clear().apply()
@@ -189,10 +156,7 @@ class DockTuningStore(context: Context) {
         private const val KEY_DAMPING = "damping_overshoot"
 
         // ⚠️ ADR-056 液体变形
-        private const val KEY_LIQUID_STRETCH = "liquid_stretch"
-        private const val KEY_LIQUID_SQUASH = "liquid_squash"
-        private const val KEY_LIQUID_ENABLED = "liquid_enabled"
-
+            
         // ⚠️ ADR-044：默认值 = 用户在设置页调好后发来的那组参数。
         //    来源：2026-09-18 用户真机截图（设置页 10 项读数）。
         //    之前每次改动都重设默认，这次以**用户实际调出来的观感**为准。
@@ -200,7 +164,7 @@ class DockTuningStore(context: Context) {
         const val DEF_CORNER = 28          // Dock 圆角（≤厚度/2；用户选 30 会越界 1dp）
         const val DEF_ELEVATION = 8
         const val DEF_SLIDER_H = 48        // 滑块高度
-        const val DEF_SLIDER_CORNER = 24   // 滑块圆角
+        const val DEF_SLIDER_CORNER = 30   // 滑块圆角（用户实测指定）
         const val DEF_SLIDER_W = 0         // 滑块宽度增量（贴文字）
         const val DEF_TEXT = 160           // 16.0sp
         const val DEF_BOTTOM_OFFSET = 35   // 距屏幕底部
@@ -219,7 +183,7 @@ class DockTuningStore(context: Context) {
         const val MIN_SLIDER_H = 24
         const val MAX_SLIDER_H = 60
         const val MIN_SLIDER_CORNER = 0
-        const val MAX_SLIDER_CORNER = 32
+        const val MAX_SLIDER_CORNER = 40   // ⚠️ 放宽：默认已设 30，且滑块高度可达 60（半高 30）
         const val MIN_SLIDER_W = 0
         const val MAX_SLIDER_W = 40
         const val MIN_TEXT = 90           // 9.0sp
@@ -234,13 +198,7 @@ class DockTuningStore(context: Context) {
         // ⚠️ ADR-056 液体变形默认值
         //   拉伸 22% + 压缩 30% —— 实测观感接近 iOS/小米的"Q弹"，
         //   再大就像橡皮筋了。
-        const val DEF_LIQUID_STRETCH = 22
-        const val MIN_LIQUID_STRETCH = 0
-        const val MAX_LIQUID_STRETCH = 60
 
-        const val DEF_LIQUID_SQUASH = 30
-        const val MIN_LIQUID_SQUASH = 0
-        const val MAX_LIQUID_SQUASH = 80
         // ⚠️ ADR-041：距底部 0~120dp；宽度用「左右边距」表示，0~120dp
         const val MIN_BOTTOM_OFFSET = 0
         const val MAX_BOTTOM_OFFSET = 120

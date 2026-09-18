@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  通用提示弹窗（ADR-087）。
+
+  ⚠️⚠️ 为什么不用 Snackbar（用户反馈「底部这个提示太丑了 换成之前一样的弹窗」）：
+     · Snackbar 贴在**屏幕最底部**，会被底部 Dock 遮挡/挤在一起
+     · 它是横贯全屏的黑色长条，与 App 的圆角卡片风格完全不符
+     · 系统默认样式，改不动
+
+     ✅ 改用与「课程详情」「资料编辑」同样的**圆角卡片弹窗**，
+        视觉上统一，且居中显示不会被 Dock 遮挡。
+
+  ⚠️ 结构参考 dialog_course_detail.xml：
+     圆角 28dp（@dimen/card_corner_large，与主页大卡片一致）+ 按钮在卡片内部。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
+        tools:text="已更新" />
+
+    <TextView
+        android:id="@+id/tvMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textSize="14sp"
+        android:lineSpacingExtra="3dp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="学期第一周已设为 2026-08-31（周一）" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnOk"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="18dp"
+        android:minWidth="88dp"
+        android:text="知道了"
+        android:textSize="14sp" />
+
+</LinearLayout>

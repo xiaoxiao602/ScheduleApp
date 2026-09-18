@@ -20,14 +20,24 @@ android {
         minSdk 26          // Android 8.0，覆盖绝大多数在用机型
         targetSdk 35
         versionCode 1
-        // beta 版本标识：显示为「广软课表 1.0-beta」
-        versionName "1.0-beta"
+        // ADR-086：去除 beta 标识，定为正式版 1.0.0
+        versionName "1.0.0"
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // ⚠️ ADR-086：去掉产物文件名里的 "-debug" 后缀。
+    //    用户要求「文件名删除 debug」—— 安装包统一叫
+    //    「广软课程表-1.0.0.apk」，不再暴露构建类型。
+    //    仍用 debug 签名（自用），只是文件名干净。
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "广软课程表-${variant.versionName}.apk"
         }
     }
 
