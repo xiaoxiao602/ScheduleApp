@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  周次列表项（ADR-081）。
+
+  布局：
+     [第 3 周]   [9/14 - 9/20]          [今天]  [✓]
+      粗体15sp     灰色13sp              徽标    选中勾
+
+  ⚠️ 不加 radio 圆点：这是"点一下就跳走"，不是"先选再确认"。
+     改用「背景高亮 + 右侧勾」表达当前周（M3 做法）。
+  ⚠️ 触摸目标 ≥ 52dp：列表项要高一些，手指才好点。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:minHeight="52dp"
+    android:paddingHorizontal="12dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/tvWeekNum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="64dp"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        tools:text="第 3 周" />
+
+    <TextView
+        android:id="@+id/tvWeekRange"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:textSize="13sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        tools:text="9/14 - 9/20" />
+
+    <TextView
+        android:id="@+id/tvTodayBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp"
+        android:text="今天"
+        android:textSize="11sp"
+        android:textColor="?attr/colorPrimary"
+        android:background="@drawable/bg_today_badge"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/checkMark"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_check"
+        android:importantForAccessibility="no"
+        app:tint="?attr/colorPrimary"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</LinearLayout>

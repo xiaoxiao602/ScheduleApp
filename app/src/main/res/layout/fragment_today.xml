@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="96dp">
+
+        <!-- ===== 顶部品牌区：徽标 + 名称 + 副标题 + 账号入口 ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="12dp">
+
+            <ImageView
+                android:id="@+id/ivLogo"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:src="@drawable/ic_gzus_logo"
+                android:contentDescription="广州软件学院校徽"
+                android:scaleType="fitCenter" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <!-- ⚠️ ADR-067：改用统一的页面标题样式（原为手写 21sp） -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="广软课程表"
+                    android:textAppearance="@style/TextAppearance.GzuSchedule.PageTitle" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="广州软件学院 · 个人课表"
+                    android:textSize="11sp"
+                    android:alpha="0.6" />
+            </LinearLayout>
+
+            <!--
+              头像（ADR-012）：有自定义头像显示图片，否则显示姓氏字的圆形色块。
+              背景色在代码里取卡片同色（?attr/colorPrimary），保持一致。
+            -->
+            <com.gzuschedule.app.ui.widget.AvatarView
+                android:id="@+id/avatarHeader"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="我的" />
+        </LinearLayout>
+
+        <!--
+          信息卡（ADR-019）：改为【渐变色】+ 更大圆角，取代原来的纯色块。
+          渐变从品牌蓝过渡到稍亮的蓝，产生高级的层次感（比纯色更现代）。
+        -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:cardCornerRadius="@dimen/card_corner_large"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_hero_gradient"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="13sp"
+                    android:textColor="@color/hero_on_color"
+                    android:alpha="0.9"
+                    tools:text="2026年9月18日 周五" />
+
+                <TextView
+                    android:id="@+id/tvWeekBig"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/hero_on_color"
+                    android:letterSpacing="-0.02"
+                    tools:text="第 3 周 · 今天" />
+
+                <TextView
+                    android:id="@+id/tvSyncState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="12sp"
+                    android:textColor="@color/hero_on_color"
+                    android:alpha="0.8"
+                    tools:text="登录后同步你的课程" />
+
+                <!--
+                  主操作按钮（ADR-023：改回原来的填充式登录按钮）。
+                  ⚠️ 撤掉 SplitButton 的 ▼ 下拉 —— 用户要求恢复单个实心按钮。
+                  文字/底色用**固定白系**（卡片是固定深蓝渐变，不随主题）。
+                -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCardAction"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="登录教务系统"
+                    android:textColor="@color/hero_on_color"
+                    android:textSize="14sp"
+                    app:backgroundTint="@color/hero_button_bg"
+                    app:cornerRadius="22dp"
+                    app:icon="@drawable/ic_sync"
+                    app:iconTint="@color/hero_on_color" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== 今日课程 ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="24dp"
+            android:paddingHorizontal="16dp">
+
+            <!--
+              ⚠️ ADR-052：区块标题层级优化（用户：「标题不好看 优化一下」）。
+              旧样式 17sp bold + 纯黑，与卡片内 16sp bold 的课程名几乎同级，
+              显得"平"。现在：
+                * 字号 18sp、字重中等偏粗、微负字距 —— 更像"分区标题"
+                * 右侧计数用同色系淡色，形成主次
+            -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="今日课程"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.01"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/tvTodayCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                android:alpha="0.75"
+                tools:text="2 门" />
+        </LinearLayout>
+
+        <!--
+          ⚠️ ADR-049：下一节课倒计时（用户：「课程那个卡片 加上距离上课的时间
+          比如 距离上课3h40分钟」）。
+          放在「今日课程」标题下方 —— 仅当今天有尚未开始的课时才显示。
+        -->
+        <TextView
+            android:id="@+id/tvNextCourseCountdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:paddingHorizontal="16dp"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="距上课 3h40分"
+            tools:visibility="visible" />
+
+        <!-- 课程列表（RecyclerView，嵌套滚动交由外层 ScrollView 处理）
+             ⚠️ ADR-053：paddingHorizontal 必须为 0 —— 卡片自己已有 16dp
+                外边距（item_course.xml 的 layout_marginHorizontal）。
+                这里再加 16dp 会让卡片被推到 32dp，与蓝卡片（16dp）不对齐。
+                用户反馈的「没对齐」就是这处双重缩进。 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/todayList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp" />
+
+        <!-- 空状态 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/todayEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="@dimen/card_corner_medium"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/card_surface"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="36dp">
+
+                <TextView
+                    android:id="@+id/tvEmptyIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✦"
+                    android:textSize="34sp"
+                    android:alpha="0.3" />
+
+                <TextView
+                    android:id="@+id/tvEmptyText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:text="尚未同步课表"
+                    android:textSize="14sp"
+                    android:alpha="0.7" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== 最近成绩（ADR-009 方案A；无数据时整块隐藏） ===== -->
+        <LinearLayout
+            android:id="@+id/gradeSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="22dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="最近成绩"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="-0.01"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAllGrades"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:text="全部"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/gradeList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="4dp"
+                android:paddingHorizontal="16dp" />
+        </LinearLayout>
+
+        <!--
+          ===== 近期考试（ADR-049：改为**总是显示**） =====
+          ⚠️ 用户要求：「在这里显示考试信息 没有就写近期无考试 有考试的话提前一个月显示」。
+          原设计是"无数据整块隐藏"，导致用户分不清「没考试」和「没同步」；
+          现在始终显示，无考试时给出明确文案。
+        -->
+        <LinearLayout
+            android:id="@+id/examSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="22dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="近期考试"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="-0.01"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAllExams"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:text="全部"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/examList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="4dp"
+                android:paddingHorizontal="16dp" />
+
+            <!-- 无考试时的文案（ADR-049：不再整块隐藏，而是明确告知） -->
+            <TextView
+                android:id="@+id/tvExamEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:paddingHorizontal="16dp"
+                android:text="近期无考试"
+                android:textSize="13sp"
+                android:alpha="0.55"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvUpdatedAt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:textSize="11sp"
+            android:alpha="0.45"
+            tools:text="尚未更新" />
+
+    </LinearLayout>
+</ScrollView>

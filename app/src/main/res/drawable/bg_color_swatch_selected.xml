@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 色板格子「当前选中」描边（ADR-065）。白色内圈，在任何底色上都可见。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <stroke android:width="3dp" android:color="#FFFFFFFF" />
+    <corners android:radius="10dp" />
+</shape>

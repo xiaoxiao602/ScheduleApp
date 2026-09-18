@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  设置页统一列表行（ADR-045）。
+
+  ⚠️ 用户采纳的优化建议：「像『成绩查询』『考试安排』这些选项目前看起来像
+  普通的静态文字。建议在左侧加上线性图标，右侧加上 > 箭头，用统一的
+  列表行样式，让用户一眼就知道是可以点击进入的。」
+
+  结构：[图标 24dp]  标题（weight=1）  [副标题]  [chevron ›]
+
+  用法（代码里 setCompoundDrawables 不行 —— 需要整体可点击 + 统一行高）：
+    通过 LayoutInflater 给每个入口设置图标与标题，或直接在 XML 里
+    <include layout="@layout/item_settings_row" /> 后覆盖 id/文案。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="56dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="20dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- 左侧线性图标 -->
+    <ImageView
+        android:id="@+id/rowIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="16dp"
+        android:importantForAccessibility="no"
+        android:alpha="0.75"
+        tools:src="@drawable/ic_today"
+        tools:tint="?attr/colorPrimary" />
+
+    <!-- 标题（占满剩余空间，使其左对齐且可换行） -->
+    <TextView
+        android:id="@+id/rowTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="15sp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        tools:text="成绩查询" />
+
+    <!-- 右侧副标题（可选，如当前值） -->
+    <TextView
+        android:id="@+id/rowValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textSize="13sp"
+        android:alpha="0.6"
+        android:visibility="gone"
+        tools:text="2026-08-31"
+        tools:visibility="visible" />
+
+    <!-- 右侧箭头（暗示可点击） -->
+    <ImageView
+        android:id="@+id/rowChevron"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_chevron_right"
+        android:importantForAccessibility="no"
+        android:alpha="0.45" />
+
+</LinearLayout>

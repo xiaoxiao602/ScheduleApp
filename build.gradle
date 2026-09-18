@@ -1,0 +1,10 @@
+// Top-level build file
+plugins {
+    id 'com.android.application' version '8.7.3' apply false
+    id 'org.jetbrains.kotlin.android' version '2.0.21' apply false
+    // ⚠️ ADR-078 验证：Compose 编译器插件（Kotlin 2.0+ 起随 Kotlin 版本走）
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.0.21' apply false
+    // ⚠️ ADR-049：KSP 版本必须与 Kotlin 版本严格对应（2.0.21-1.0.28）。
+    //    替代 kapt —— kapt 在本工程持续误报「类重复」（见 app/build.gradle 注释）。
+    id 'com.google.devtools.ksp' version '2.0.21-1.0.28' apply false
+}

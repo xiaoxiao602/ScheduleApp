@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="@dimen/card_corner_large"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/card_surface"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/card_stroke">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:minHeight="104dp"
+        android:padding="18dp">
+
+        <!-- 左侧节次条 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:minWidth="52dp"
+            android:layout_marginEnd="14dp">
+
+            <TextView
+                android:id="@+id/tvPeriod"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                tools:text="第 3-4 节" />
+
+            <!-- 上下课时间（ADR-013）。节次映射来，取不到则不显示。 -->
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textSize="10sp"
+                android:alpha="0.55"
+                android:maxLines="2"
+                android:gravity="center"
+                tools:text="10:00\n11:40" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="14dp"
+            android:background="?attr/colorOutlineVariant" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="高等数学（一）" />
+
+            <TextView
+                android:id="@+id/tvMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="12sp"
+                android:alpha="0.65"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="A101 · 张老师" />
+
+            <!--
+              上课进度条（ADR-031）。
+              仅当该课程**正在进行中**时显示（代码里控制 visibility），
+              进度随时间推进；下课即结束。
+
+              ⚠️ 动画方式对齐「原生音乐播放器进度条」：
+              用带 trailing 的动画而不是跳变 —— 由 ProgressBarCompat 风格实现：
+                * 进度值变化用 ObjectAnimator 平滑过渡
+                * 起始有一小段"脉动"（不确定态 → 确定态的过渡）
+              见 TodayFragment.updateProgress / ScheduleFragment 的用法。
+            -->
+            <LinearLayout
+                android:id="@+id/progressRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ProgressBar
+                    android:id="@+id/progressCourse"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:max="1000"
+                    android:progress="0"
+                    android:progressTint="?attr/colorPrimary"
+                    android:progressBackgroundTint="?attr/colorSurfaceVariant"
+                    tools:progress="420" />
+
+                <TextView
+                    android:id="@+id/tvProgress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="11sp"
+                    android:alpha="0.75"
+                    android:textColor="?attr/colorPrimary"
+                    tools:text="进行中 · 还剩 38 分钟" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!--
+          ⚠️ ADR-051：已上完的课显示「蓝色圆底 + 白勾」。
+          用户要求：「上完的课这里显示一个 和卡片一样的蓝色的勾 勾可以大一点点」。
+
+          表现：
+            * 与卡片同色系（colorPrimary）的**圆形底**
+            * 白色对勾，尺寸比常规图标略大（24dp 图标 / 36dp 圆底）
+            * 仅在该课**已结束**时显示，其余时候 GONE（不占位）
+        -->
+        <FrameLayout
+            android:id="@+id/doneBadge"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_course_done"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

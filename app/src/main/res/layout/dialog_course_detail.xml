@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  课程详情弹窗（ADR-017 / ADR-047）。
+
+  ⚠️ ADR-047 排版重做，修两个问题（用户：「把弹出窗口的知道了按钮放到卡片内部
+  优化一下排版」）：
+
+  ① 「知道了」按钮原先由 AlertDialog.setPositiveButton 提供 ——
+     系统把它画在**卡片之外**的 ButtonBar 里，于是：
+       * 卡片圆角与按钮不在同一视觉容器内，像两块拼在一起
+       * 卡片底部还会留一块给 ButtonBar 的空白
+     现在按钮移入本布局底部（MaterialButton，全宽），成为卡片的最后一行。
+
+  ② 原排版是「emoji + 一段文字」逐行铺开，信息层级弱。
+     现在改为**两列**：左侧灰色标签（固定宽度），右侧正文。
+     标签对齐后一眼能扫到"哪个是教室、哪个是老师"。
+
+  结构：
+    [课程名 (20sp bold)]
+    [节次/时间 · 周次 ...]  ← 副标题小字
+    ──────────── 分隔 ────────────
+    时间  周三 10:40-12:00
+    节次  3-4 节
+    地点  A101
+    教师  张老师
+    周次  第 1-9 周
+    学分  3.0
+    ［      知道了      ］  ← 在卡片内部
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rounded"
+    android:paddingTop="24dp">
+
+    <!-- ===== 头部：课程名 + 副标题 ===== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="28dp">
+
+        <TextView
+            android:id="@+id/tvDetailName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="21sp"
+            android:textStyle="bold"
+            android:letterSpacing="-0.01"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="数据库原理" />
+
+        <TextView
+            android:id="@+id/tvDetailSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="13sp"
+            android:alpha="0.6"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="周三 10:40-12:00 · 第 1-9 周" />
+    </LinearLayout>
+
+    <!-- 分隔线：更靠近标题，留白更克制 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginHorizontal="28dp"
+        android:background="?attr/colorOutlineVariant"
+        android:alpha="0.35" />
+
+    <!-- ===== 信息区：左标签 + 右正文 ===== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp">
+
+        <!-- 时间 -->
+        <LinearLayout style="@style/DetailRow">
+            <TextView style="@style/DetailLabel" android:text="时间" />
+            <TextView android:id="@+id/tvDetailTime" style="@style/DetailValue"
+                tools:text="10:40 - 12:00" />
+        </LinearLayout>
+
+        <!-- 节次 -->
+        <LinearLayout style="@style/DetailRow">
+            <TextView style="@style/DetailLabel" android:text="节次" />
+            <TextView android:id="@+id/tvDetailPeriod" style="@style/DetailValue"
+                tools:text="3-4 节" />
+        </LinearLayout>
+
+        <!-- 地点 -->
+        <LinearLayout style="@style/DetailRow">
+            <TextView style="@style/DetailLabel" android:text="地点" />
+            <TextView android:id="@+id/tvDetailRoom" style="@style/DetailValue"
+                tools:text="A101" />
+        </LinearLayout>
+
+        <!-- 教师 -->
+        <LinearLayout style="@style/DetailRow">
+            <TextView style="@style/DetailLabel" android:text="教师" />
+            <TextView android:id="@+id/tvDetailTeacher" style="@style/DetailValue"
+                tools:text="张老师" />
+        </LinearLayout>
+
+        <!-- 周次 -->
+        <LinearLayout style="@style/DetailRow">
+            <TextView style="@style/DetailLabel" android:text="周次" />
+            <TextView android:id="@+id/tvDetailWeeks" style="@style/DetailValue"
+                tools:text="第 1-9 周" />
+        </LinearLayout>
+
+        <!-- 学分 -->
+        <LinearLayout
+            android:id="@+id/rowCredit"
+            style="@style/DetailRow">
+            <TextView style="@style/DetailLabel" android:text="学分" />
+            <TextView android:id="@+id/tvDetailCredit" style="@style/DetailValue"
+                tools:text="3.0" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--
+      ===== 知道了（在卡片内部）=====
+      ⚠️ 不再用 setPositiveButton —— 那会被系统放在卡片外。
+      这里做成卡片内部的全宽按钮，视觉上是一体的。
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDetailClose"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp"
+        android:text="知道了" />
+
+</LinearLayout>

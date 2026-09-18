@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      ============================================================
+      校徽配色（ADR-009）—— 浅色主题
+      ============================================================
+      从 校徽.png 提取主色 #083878（HSL 214°, 88%, 25%），占比 37.1%。
+
+      ⚠️ 原始色明度仅 25%，直接做浅色主题主色对比度不足，
+      故保持色相 214° 调亮得到 primary = #0755BC。
+
+      命名：语义化（brand_primary / brand_on_primary ...），
+      values-night/ 下有同名深色值，系统按日夜自动切换。
+    -->
+
+    <!-- 主色 -->
+    <!--
+      ⚠️ 用户要求「卡片蓝色稍微深一点点」：由 #0755BC 调深至 #06459B，
+      色相保持 214°（校徽蓝），仅降明度约 6%。
+      仍满足浅色主题下与白字的对比度要求（>4.5:1）。
+    -->
+    <color name="brand_primary">#06459B</color>
+    <color name="brand_on_primary">#FFFFFF</color>
+    <color name="brand_primary_container">#AECFFB</color>
+    <color name="brand_on_primary_container">#021D41</color>
+
+    <!-- 次级色 -->
+    <color name="brand_secondary">#4A6088</color>
+    <color name="brand_on_secondary">#FFFFFF</color>
+    <color name="brand_secondary_container">#D9E2FF</color>
+    <color name="brand_on_secondary_container">#001B3F</color>
+
+    <!-- 第三色 -->
+    <color name="brand_tertiary">#77536D</color>
+    <color name="brand_on_tertiary">#FFFFFF</color>
+    <color name="brand_tertiary_container">#FFD8F0</color>
+    <color name="brand_on_tertiary_container">#2C1229</color>
+
+    <!-- 表面层 -->
+    <!--
+      ⚠️ ADR-066：背景由 #FDFBFF（几乎纯白）调暗到 #F0F2F7。
+      原因：用户反馈「Dock 和应用背景色太接近，不好区分」。
+        旧值 #FDFBFF 与 Dock 的 #F7F9FC 亮度只差约 2% → 边界看不出来，
+        Dock 像是"融"进背景，失去悬浮感。
+      新值降约 6% 亮度并带一点蓝调，与 Dock 的近白形成明确层次 ——
+        Dock 看起来像浮在浅灰蓝底上的一张白卡片。
+      ⚠️ 这是 Material 3 的标准层次做法（surface 比 surfaceContainer 略深），
+         不是随便调一个灰。勿再调回接近纯白。
+    -->
+    <color name="brand_surface">#F0F2F7</color>
+    <color name="brand_surface_container">#EEF0F7</color>
+    <color name="brand_surface_container_high">#E3E6EE</color>
+
+    <!--
+      surface 上的前景色（ADR-029）。
+      必须显式声明，否则 M3 默认值可能与自定义 brand_surface 对比不足
+      → 深色模式下出现「灰字看不清」。
+    -->
+    <color name="brand_on_surface">#1A1C1E</color>
+    <color name="brand_on_surface_variant">#44474E</color>
+</resources>

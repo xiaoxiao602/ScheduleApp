@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  头像控件布局（ADR-015）。
+
+  ⚠️ 为什么改用 XML 静态布局：
+  此前 AvatarView 用代码 addView 构建子视图，姓氏字始终显示不出。
+  代码构建容易出现「子视图未正确 measure/layout」的隐蔽问题（难排查）。
+  改成 inflate 静态布局后，测量与布局交给系统，行为可预测。
+
+  结构：FrameLayout
+    ├─ ivAvatar   自定义头像图片（默认 gone）
+    └─ tvInitial  姓氏字（默认 visible，白字加粗、居中）
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ImageView
+        android:id="@+id/ivAvatar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="自定义头像"
+        android:visibility="gone"
+        tools:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvInitial"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="李" />
+
+</merge>

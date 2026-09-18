@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  课程配色（ADR-063：极浅底 + 强色条 + 深字）。
+
+  ⚠️⚠️ 这是用户对「周课表配色」的【第 4 次】反馈。
+      历史：
+        第 1 版 浅底 + 单一深字      → 「不高级」
+        第 2 版 浅底 + 两级文字层次   → 仍是浅底，用户没认可
+        第 3 版 饱和底 + 白字        → 本轮被否（「这个好丑」）
+
+      ⚠️ 三次尝试的共性是：都在调整「底色/文字」这一对关系，
+         而用户真正在看的是**整体气质**。饱和底的问题在于：
+         一整列全是高彩度色块 → 页面花、吵、廉价感。
+
+  ── 本轮方案：把"颜色"从大块底色收缩成**一条窄色条** ──────
+     · 卡片底 = 近白（统一，不花）
+     · 左侧 5dp 竖色条 = 高饱和（承担"识别哪门课"的职责）
+     · 文字 = 深色（对比稳定，不受色相影响）
+  这样：**页面整体是干净的白色系，颜色只做点缀** ——
+  这是 iOS 日历、Notion、Linear 等公认"高级"的产品共同做法。
+
+  ⚠️ 色条与文字的关系：色条是视觉锚点，文字永远深色。
+     不要因为"色条是什么色"就去调文字色 —— 那会重蹈前几版的覆辙。
+-->
+
+<resources>
+
+    <!--
+      色条色板：高饱和 + 中深，在近白底上足够醒目。
+      10 色，色相均匀拉开（H 间隔约 30-40°），配合 CourseColorAssigner 不撞色。
+    -->
+    <color name="course_1">#1E6FD9</color>   <!-- 蓝     H≈215 -->
+    <color name="course_2">#0E9B8A</color>   <!-- 青绿   H≈175 -->
+    <color name="course_3">#3D9B40</color>   <!-- 绿     H≈125 -->
+    <color name="course_4">#8A9B1E</color>   <!-- 黄绿   H≈70  -->
+    <color name="course_5">#D1871A</color>   <!-- 橙     H≈38  -->
+    <color name="course_6">#D93F3F</color>   <!-- 红     H≈0   -->
+    <color name="course_7">#C4398C</color>   <!-- 洋红   H≈325 -->
+    <color name="course_8">#7B4FD9</color>   <!-- 紫     H≈265 -->
+    <color name="course_9">#0F8FC4</color>   <!-- 天蓝   H≈198 -->
+    <color name="course_10">#6B8E23</color>  <!-- 橄榄   H≈80  -->
+
+    <!--
+      卡片文字：一律深色（近白底 → 深字，对比稳定）。
+      ⚠️ 课名用近黑，副信息用中灰 —— 层次靠明度差，不靠色相。
+    -->
+    <color name="course_cell_title">#FF1A1C1E</color>
+    <color name="course_cell_meta">#FF6B7280</color>
+    <color name="course_cell_text">#FF1A1C1E</color>
+
+    <!-- 卡片底：统一近白（不再按课程变色） -->
+    <color name="course_cell_bg">#FFFFFFFF</color>
+
+    <!-- 卡片描边：极浅，勾轮廓 -->
+    <color name="course_card_stroke">#14000000</color>
+
+</resources>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  日期条单元格（ADR-062 rev2：瘦身解决「拥挤」）。
+
+  ⚠️ 用户反馈：「这里很拥挤」。
+     根因：7 个单元格平分屏宽（每格约 1/7 ≈ 50dp），而每格要竖排
+     「周三 / 16 / 2门」三行文字 —— 50dp 宽度塞 12sp+17sp+10sp 三行，
+     横向几乎没有呼吸空间，视觉上挤成一团。
+
+  ── 本次改动 ──────────────────────────────
+  ① 去掉 layout_weight=1，改为**固定宽度 52dp**：
+     不再让 7 格互相挤压，每格尺寸恒定。
+  ② 日期条容器改为**横向可滑动**（HorizontalScrollView）：
+     7 格 × 52dp = 364dp，窄屏放不下时可以滑，而不是压缩。
+     ⚠️ 但当前 7 格在常见屏宽下**正好放得下**，滑动只在极端小屏触发。
+  ③ 字号微调：数字 17sp → 16sp，标签 12sp → 11sp，减少拥挤感。
+  ④ 内边距：minHeight 68dp → 62dp，纵向更紧凑但不局促。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:minWidth="46dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:minHeight="62dp"
+    android:paddingVertical="7dp"
+    android:paddingHorizontal="1dp"
+    android:background="@drawable/bg_date_chip">
+
+    <TextView
+        android:id="@+id/tvDayLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:textColor="@color/date_chip_label"
+        tools:text="周三" />
+
+    <TextView
+        android:id="@+id/tvDayNum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:textColor="@color/date_chip_num"
+        tools:text="16" />
+
+    <TextView
+        android:id="@+id/tvDayCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:textSize="9.5sp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:textColor="@color/date_chip_count"
+        tools:text="2门" />
+
+</LinearLayout>

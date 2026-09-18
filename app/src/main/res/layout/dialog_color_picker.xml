@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  颜色选择弹窗（ADR-065）。
+
+  两部分：
+    ① 预设色板网格（M3 官方色，4 列 × 6 行）
+    ② 「自定义颜色…」按钮 → 再弹 HSV 色轮
+
+  ⚠️ 用 ScrollView 包住网格：
+     24 个格子在小屏上可能超高，滚动兜底。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp">
+
+        <!-- 预设色板网格 -->
+        <LinearLayout
+            android:id="@+id/presetGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <!-- 分隔 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="?attr/colorOutlineVariant" />
+
+        <!-- 自定义颜色 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCustomColor"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="自定义颜色…" />
+
+    </LinearLayout>
+
+</ScrollView>

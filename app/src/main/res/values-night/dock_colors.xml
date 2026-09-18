@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dock 配色 · 深色主题（ADR-037）。
+
+  ⚠️ 同样改为不透明；滑块颜色保持不变。
+-->
+<resources>
+    <!-- 滑块填充：半透明亮蓝（保持不变） -->
+    <color name="dock_slider_fill">#596E9BD6</color>
+    <!-- 滑块描边：半透明高光（保持不变） -->
+    <color name="dock_slider_stroke">#8C9FC0EA</color>
+    <!-- 选中文字：近白 -->
+    <color name="dock_text_selected">#F0F4FF</color>
+    <!-- 未选中文字：中灰 -->
+    <color name="dock_text_unselected">#9AA0A6</color>
+    <!-- Dock 背景：不透明深色 -->
+    <color name="dock_bar_bg">#FF1F2227</color>
+</resources>

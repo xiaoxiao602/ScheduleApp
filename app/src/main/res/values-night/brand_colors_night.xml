@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      校徽配色（ADR-009）—— 深色主题。
+      与 values/brand_colors.xml 同名，系统按日夜自动切换。
+      深色下主色改用较亮的 tone（#79B0F9），保证在暗背景上的对比度。
+    -->
+
+    <!-- 主色 -->
+    <color name="brand_primary">#79B0F9</color>
+    <color name="brand_on_primary">#04316D</color>
+    <color name="brand_primary_container">#064190</color>
+    <color name="brand_on_primary_container">#AECFFB</color>
+
+    <!-- 次级色 -->
+    <color name="brand_secondary">#B2C7EF</color>
+    <color name="brand_on_secondary">#16304F</color>
+    <color name="brand_secondary_container">#324867</color>
+    <color name="brand_on_secondary_container">#D9E2FF</color>
+
+    <!-- 第三色 -->
+    <color name="brand_tertiary">#E6B9D8</color>
+    <color name="brand_on_tertiary">#45263D</color>
+    <color name="brand_tertiary_container">#5E3C55</color>
+    <color name="brand_on_tertiary_container">#FFD8F0</color>
+
+    <!-- 表面层 -->
+    <!-- ⚠️ ADR-066：夜间同理，背景压深一档，与 Dock 拉开层次。 -->
+    <color name="brand_surface">#0B0D10</color>
+    <color name="brand_surface_container">#1D2024</color>
+    <color name="brand_surface_container_high">#282A2F</color>
+
+    <!--
+      surface 上的前景色 · 深色主题（ADR-029）。
+      深底必须配浅字，否则「深色模式下字看不见」。
+    -->
+    <color name="brand_on_surface">#E3E2E6</color>
+    <color name="brand_on_surface_variant">#C4C6CF</color>
+</resources>

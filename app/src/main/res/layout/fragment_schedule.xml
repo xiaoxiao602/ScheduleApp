@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?><!--  周课表页（ADR-062 重构：网格 → 按天列表）。  ⚠️ 与旧版的根本差异（用户第 3 次反馈后换架构）：     旧版 = 7列×8行【网格】，课挤在小格子里 → 课程名被折叠、卡片太小。     新版 = 顶部【横向日期条】+ 下方【按天分组的大卡片列表】，无网格。  ⚠️ 用户认可的截图（图 3）形态：     · 周切换：左右箭头 + 「9月 · 第 3 周」     · 日期条：周三16/周四17/周五18…，各带「2门」，选中日深蓝高亮     · 列表：只列出**选中那天**的课，整宽大卡片（左侧竖色条）  ⚠️ C3 交互（用户选定）：     日期条可点选 → 高亮并滚动到那天；     但下方**仍按天分组列出整周** —— 既是图 3 的观感，又不丢"一周全貌"。  ⚠️ 父容器链（勿再踩坑）：     本布局是 Fragment 的根，套在 MainActivity 的 content 容器内。     底部 Dock 是**叠层悬浮**，不占本布局空间 —— 故底部留白由     scrollContent 的 paddingBottom 负责（见下）。--><LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"    xmlns:app="http://schemas.android.com/apk/res-auto"    xmlns:tools="http://schemas.android.com/tools"    android:layout_width="match_parent"    android:layout_height="match_parent"    android:orientation="vertical"    android:background="?android:attr/colorBackground">    <!-- ==================== 顶部标题 + 周切换 ==================== -->    <LinearLayout        android:id="@+id/headerBlock"        android:layout_width="match_parent"        android:layout_height="wrap_content"        android:orientation="vertical"        android:paddingHorizontal="16dp"        android:paddingTop="14dp">        <!-- 标题行 -->        <LinearLayout            android:layout_width="match_parent"            android:layout_height="wrap_content"            android:orientation="horizontal"            android:gravity="center_vertical">            <!-- ⚠️ ADR-067：改用统一的页面标题样式（原为手写 28sp） -->            <TextView                android:layout_width="0dp"                android:layout_height="wrap_content"                android:layout_weight="1"                android:text="周课表"                android:textAppearance="@style/TextAppearance.GzuSchedule.PageTitle" />            <ImageView                android:layout_width="24dp"                android:layout_height="24dp"                android:src="@drawable/ic_calendar"                android:importantForAccessibility="no"                app:tint="?android:attr/textColorSecondary" />        </LinearLayout>        <!-- 学年学期 -->        <TextView            android:id="@+id/tvTermName"            android:layout_width="match_parent"            android:layout_height="wrap_content"            android:layout_marginTop="2dp"            android:textSize="13sp"            android:textColor="?android:attr/textColorSecondary"            tools:text="2026-2027 学年 · 第 1 学期" />        <!--          ===== 周次切换 · M3 Expressive SegmentedButton（ADR-063）=====          ⚠️ 用户反馈「跳转周次的控件 UI 太老了 用新的」。             旧版是「图标按钮 + 文字按钮 + 图标按钮」拼的普通横排 ——             三个控件风格各自独立，看着像 2019 年的工具栏。          ✅ 换成 M3 Expressive 的 **SingleChoiceSegmentedButtonRow**：             · 三个段共用一个**连续胶囊外框**，视觉上是一个整体控件             · 段间有细分割线，选中段有独立填充色             · 这是 Google 在 Material 3 Expressive 里主推的新控件             · 依赖 material 1.14.0（本项目已有）             左右两段负责逐周翻 —— 既能微调也能直达。        -->        <!--
+          ===== 周次切换条（ADR-085）=====
+          ┌────────────────────────┬──────────────┐
+          │ ‹        第 3 周 ›     │   回到本周    │
+          └────────────────────────┴──────────────┘
+            ↑靠左      ↑居中            ↑居中
+
+          ⚠️ ADR-084 为了「‹ 靠左」把整个左块设成 gravity=start，
+             副作用是「第 N 周 ›」也一起左移了。
+          ✅ 本轮用**嵌套结构**把两件事分开：
+             [‹ 固定 40dp] + [周次组 weight=1 gravity=center]
+             → ‹ 贴容器左边；周次组在剩余空间里居中。
+
+          ⚠️ 字体统一：第 N 周 与 回到本周 均为 14sp + bold。
+        -->
+        <LinearLayout
+            android:id="@+id/weekBar"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_week_switcher"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <!-- ===== 左块：‹ 靠左 + 周次组居中（占一半） ===== -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:baselineAligned="false">
+
+                <!--
+                  ⚠️ ADR-086 修正点击水波纹：
+                     用 MaterialButton 的 app:icon 而非自定义 foreground ——
+                     IconButton 样式的 ripple 是圆形（RippleDrawable with oval mask），
+                     但必须让 inset=0 且 padding 足够，使 ripple 圆直径 = 控件尺寸。
+
+                     旧问题：padding=0 → 内容(图标)填满 40dp，
+                     而 M3 IconButton 的 ripple mask 依赖 padding 决定圆形半径，
+                     padding=0 会让 mask 退化成方形 → 蓝圈是方块。
+                     ✅ 改为 48dp 控件 + padding=12dp（图标 24dp 居中），
+                        ripple 圆直径 = 48dp，正好裹住图标。
+                -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPrevWeek"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    android:padding="12dp"
+                    android:contentDescription="上一周"
+                    app:icon="@drawable/ic_chevron_left"
+                    app:iconTint="?attr/colorPrimary"
+                    app:iconSize="24dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:baselineAligned="false">
+
+                    <TextView
+                        android:id="@+id/btnWeekPicker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:minWidth="72dp"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:paddingHorizontal="8dp"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorPrimary"
+                        android:background="@drawable/ripple_pill"
+                        android:clickable="true"
+                        android:focusable="true"
+                        tools:text="第 3 周" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnNextWeek"
+                        style="@style/Widget.Material3.Button.IconButton"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        android:padding="12dp"
+                        android:contentDescription="下一周"
+                        app:icon="@drawable/ic_chevron_right"
+                        app:iconTint="?attr/colorPrimary"
+                        app:iconSize="24dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- 竖分隔线 -->
+            <View
+                android:layout_width="1dp"
+                android:layout_height="20dp"
+                android:background="?attr/colorOutlineVariant" />
+
+            <!-- ===== 右块：回到本周 ===== -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBackToNow"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="8dp"
+                android:text="回到本周"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>        <!--          日期区间小字（ADR-084：下移，与切换条拉开距离）          ⚠️ 用户反馈「下面这行时间文字下移到划线的位置」——             原实现紧贴切换条（无 marginTop），文字挤在分隔线附近。             加 8dp 上边距后，它与切换条形成清晰的"标题 → 说明"层级。        -->        <LinearLayout            android:layout_width="match_parent"            android:layout_height="wrap_content"            android:layout_marginTop="8dp"            android:orientation="horizontal"            android:gravity="center_vertical">            <TextView                android:id="@+id/tvWeekLabel"                android:layout_width="0dp"                android:layout_height="wrap_content"                android:layout_weight="1"                android:textSize="12sp"                android:textColor="?android:attr/textColorSecondary"                tools:text="9/14 - 9/20 · 共 12 门课" />        </LinearLayout>        <!--          ===== 横向日期条（ADR-062 rev2）=====          ⚠️ 用户反馈「很拥挤」→ 改为可横向滑动 + 单元格固定宽度。             7 格各 52dp 恒定居中，不再互相挤压；             窄屏放不下时可滑动（HorizontalScrollView）。          ⚠️ clipToPadding=false：让第一/最后一格在滚动时也能贴边显示完整。        -->        <HorizontalScrollView            android:layout_width="match_parent"            android:layout_height="wrap_content"            android:layout_marginTop="6dp"            android:scrollbars="none"            android:clipToPadding="false"            android:paddingHorizontal="2dp"            android:visibility="gone"            tools:visibility="visible">            <LinearLayout                android:id="@+id/dateStrip"                android:layout_width="match_parent"                android:layout_height="wrap_content"                android:orientation="horizontal"                android:baselineAligned="false" />        </HorizontalScrollView>    </LinearLayout>    <!-- ==================== 内容区 ==================== -->    <FrameLayout        android:layout_width="match_parent"        android:layout_height="0dp"        android:layout_weight="1"        android:layout_marginTop="6dp">        <!--          ⚠️ 唯一的滚动容器 —— 里面是「按天分组」的整周课程列表。             paddingBottom 给底部 Dock 让位（Dock 是叠层，不占布局空间）。        -->        <ScrollView            android:id="@+id/scrollContent"            android:layout_width="match_parent"            android:layout_height="match_parent"            android:paddingHorizontal="16dp"            android:paddingBottom="120dp"            android:clipToPadding="false"            android:visibility="gone"            tools:visibility="visible">            <LinearLayout                android:id="@+id/dayList"                android:layout_width="match_parent"                android:layout_height="wrap_content"                android:orientation="vertical" />        </ScrollView>        <!-- 空状态 -->        <LinearLayout            android:id="@+id/emptyState"            android:layout_width="match_parent"            android:layout_height="match_parent"            android:orientation="vertical"            android:gravity="center"            android:paddingHorizontal="32dp">            <ImageView                android:layout_width="72dp"                android:layout_height="72dp"                android:src="@drawable/ic_empty_schedule"                android:importantForAccessibility="no"                app:tint="?android:attr/textColorSecondary" />            <TextView                android:layout_width="wrap_content"                android:layout_height="wrap_content"                android:layout_marginTop="16dp"                android:text="还没有课表数据"                android:textSize="16sp"                android:textStyle="bold" />            <TextView                android:layout_width="match_parent"                android:layout_height="wrap_content"                android:layout_marginTop="6dp"                android:gravity="center"                android:text="去「设置」登录教务系统并同步，即可看到你的课程表"                android:textSize="13sp"                android:textColor="?android:attr/textColorSecondary" />            <com.google.android.material.button.MaterialButton                android:id="@+id/btnGoSync"                android:layout_width="wrap_content"                android:layout_height="wrap_content"                android:layout_marginTop="20dp"                android:text="去同步" />        </LinearLayout>        <ProgressBar            android:id="@+id/progress"            android:layout_width="48dp"            android:layout_height="48dp"            android:layout_gravity="center"            android:visibility="gone" />    </FrameLayout></LinearLayout>

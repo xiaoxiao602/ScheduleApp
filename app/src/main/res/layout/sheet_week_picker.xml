@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  周次选择底部弹窗（ADR-081：普通滑动列表）。
+
+  ⚠️ 本轮决策（用户要求「滚轮删除，改成普通滑动列表，确保滑动正常」）：
+     滚轮方案（自研 + compose-wheelpicker）均因依赖链/兼容问题搁置，
+     改回**列表选择** —— 功能最可靠，无滑动兼容风险。
+
+  ⚠️ 交互：点某一行 → 立即跳转并关闭（不再是"滚+确定"两段式）。
+     因为是列表，"点选"就是明确意图，不需要额外确认。
+
+  ⚠️ 用 NestedScrollView 而不是普通 ScrollView：
+     BottomSheetDialog 内部有拖拽手势，NestedScrollView 能与它正确协商
+     嵌套滚动（先滚列表、列表到底再拖弹窗），避免"滑动卡住/乱跳"。
+     这正是用户反馈的"滑动有 bug"的正确解法。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="?attr/colorSurfaceContainerLow">
+
+    <!-- 拖拽把手 -->
+    <View
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_sheet_handle" />
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        android:paddingBottom="8dp"
+        android:text="选择周次"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface" />
+
+    <!--
+      周次列表（代码填充）
+      ⚠️ 固定高度上限 400dp：超出即可滚动，不足则自适应。
+         用 layout_height="wrap_content" + maxHeight 让短学期也好看。
+    -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="400dp"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
+        android:paddingBottom="12dp">
+
+        <LinearLayout
+            android:id="@+id/weekList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="12dp"
+            android:paddingBottom="12dp" />
+
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 日期条配色（ADR-063）· 夜间。 -->
+<resources>
+    <color name="date_chip_bg">#00000000</color>
+    <color name="date_chip_label">#9AA2AE</color>
+    <color name="date_chip_num">#E8EAED</color>
+    <color name="date_chip_count">#8A9199</color>
+    <color name="date_chip_on_selected">#FFFFFFFF</color>
+    <color name="date_chip_today">#AECFFB</color>
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dock 栏内容布局（ADR-037）。
+
+  ⚠️ 已**移除模糊背板**（用户要求「取消模糊，改成不透明的」）：
+  模糊做过三次都没成（抓屏发蓝 / 全屏模糊 / 局部未验证），
+  且本机无设备无法验证渲染。现在 Dock 用**不透明背景**，零渲染风险。
+
+  层级（自下而上）：
+    ① dockSlider   —— 滑块
+    ② dockLabels   —— 文字
+
+  ⚠️ 子 View 高度必须固定/wrap，**不可用 match_parent**（会撑满宿主 → 飞天）。
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- ① 滑块 -->
+    <View
+        android:id="@+id/dockSlider"
+        android:layout_width="0dp"
+        android:layout_height="34dp"
+        android:layout_gravity="start|center_vertical" />
+
+    <!-- ② 文字层 -->
+    <LinearLayout
+        android:id="@+id/dockLabels"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="6dp" />
+
+</merge>

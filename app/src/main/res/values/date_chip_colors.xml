@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  日期条配色（ADR-063）· 浅色。
+
+  ⚠️ 与卡片新风格统一：整体走「干净白 + 少量深蓝点缀」，
+     不再是上一版那种「灰底块」——用户觉得整页配色丑，
+     日期条也是其中一块。
+
+  ── 三态 ────────────────────────────────
+     普通：透明底 + 灰字（不画底色块，靠留白分隔）
+     选中：深蓝实底 + 白字（唯一的高彩度元素，聚焦点）
+     今天：深蓝字（未选中时也能认出）
+-->
+<resources>
+    <!-- 普通态：透明（避免整条都是灰块，显脏） -->
+    <color name="date_chip_bg">#00000000</color>
+
+    <!-- 「周三」：中灰 -->
+    <color name="date_chip_label">#8A9099</color>
+    <!-- 「16」：近黑（有分量） -->
+    <color name="date_chip_num">#1A1C1E</color>
+    <!-- 「2门」：浅灰（最弱） -->
+    <color name="date_chip_count">#A0A6AD</color>
+
+    <!-- 选中态文字 -->
+    <color name="date_chip_on_selected">#FFFFFFFF</color>
+    <!-- 今天（未选中） -->
+    <color name="date_chip_today">#06459B</color>
+</resources>

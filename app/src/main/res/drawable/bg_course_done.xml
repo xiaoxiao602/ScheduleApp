@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「已上完」圆底（ADR-051）。
+
+  用户要求「和卡片一样的蓝色」——
+  用 colorPrimary（也就是校徽蓝，卡片标题/进度条同一色源），
+  保证和卡片视觉语言一致，而不是另一个蓝。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="?attr/colorPrimary" />
+</shape>

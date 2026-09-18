@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      Material 3 Expressive 主题（ADR-005 / ADR-009）。
+
+      配色策略：使用【校徽提取的蓝色】作为固定品牌色（ADR-009），
+      而不是动态取色。理由：用户明确要求「从校徽取色」——
+      动态取色会跟随壁纸变化，反而丢失学校识别度。
+
+      若将来想启用动态取色，改用 Theme.ScheduleApp.Dynamic 即可（已保留）。
+
+      edge-to-edge：Android 15+ 强制，由各 Activity 通过 WindowInsets 处理内边距，
+      此处不做 fitsSystemWindows，避免双重 padding。
+    -->
+    <style name="Theme.ScheduleApp"
+        parent="Theme.Material3Expressive.DayNight.NoActionBar">
+
+        <!--
+          ⚠️ ADR-029：显式设 windowBackground！
+          之前没设 → 用系统默认（白），深色模式下**状态栏/导航栏区域透出白色**，
+          这就是用户反馈「深色模式状态栏那块是白色的」的直接原因。
+          指向 colorSurface 让它跟随深浅主题。
+        -->
+        <item name="android:windowBackground">?attr/colorSurface</item>
+
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:navigationBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">?attr/isLightTheme</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">?attr/isLightTheme</item>
+
+        <!--
+          ⚠️ Android 15+（API 35）强制 edge-to-edge，
+          显式声明以消除系统对旧行为的兼容处理。
+        -->
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">false</item>
+
+        <!--
+          校徽配色（ADR-009）。
+          直接覆写 M3 色槽，而不是 themeOverlay ——
+          themeOverlay 不是可在自定义 style 里设置的有效属性（会 AAPT 报错）。
+          浅色值在 values/，深色值在 values-night/ 由系统自动切换。
+        -->
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorOnPrimary">@color/brand_on_primary</item>
+        <item name="colorPrimaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/brand_on_primary_container</item>
+
+        <item name="colorSecondary">@color/brand_secondary</item>
+        <item name="colorOnSecondary">@color/brand_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/brand_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/brand_on_secondary_container</item>
+
+        <item name="colorTertiary">@color/brand_tertiary</item>
+        <item name="colorOnTertiary">@color/brand_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/brand_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/brand_on_tertiary_container</item>
+
+        <!--
+          ⚠️ 背景与表面统一走 brand_surface：
+          浅色 #FDFBFF / 深色 #111418，由 values-night 自动切换。
+          colorBackground 与 colorSurface 必须一致，否则页面切换会跳色。
+        -->
+        <item name="android:colorBackground">@color/brand_surface</item>
+        <item name="colorSurface">@color/brand_surface</item>
+        <!--
+          ⚠️ ADR-050：容器色阶改为与新卡片配色同源。
+
+          之前这两个槽位指向 `brand_surface_container_high`（灰调），
+          而 M3 组件（Menu/Snackbar/内嵌容器等）会**自动**取用它们 ——
+          即便我们把卡片都换成了纯白，这些组件仍会渲染成"廉价灰"，
+          造成观感不统一。
+
+          现在低阶 = 主表面色，高阶 = 卡片表面色，整体统一到同一套中性色。
+        -->
+        <item name="colorSurfaceContainerLow">@color/card_surface</item>
+        <item name="colorSurfaceContainer">@color/card_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/card_surface</item>
+        <item name="colorSurfaceContainerHighest">@color/card_surface</item>
+        <item name="colorOnSurface">@color/brand_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/brand_on_surface_variant</item>
+
+        <!-- Expressive 强调的圆角尺度 -->
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.ScheduleApp.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.ScheduleApp.Large</item>
+
+        <!--
+          ⚠️ ADR-043：弹窗圆角统一为与主页大卡片一致（28dp）。
+          标准 AlertDialog 走 M3 的 shape 系统，改这两项即全局生效；
+          自定义布局的弹窗（课程详情）另见 DialogCorner + bg_dialog_rounded。
+        -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.ScheduleApp.Dialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.ScheduleApp.Dialog</item>
+    </style>
+
+    <!-- 弹窗外观覆盖：圆角 28dp，与首页 hero 卡一致 -->
+    <style name="ThemeOverlay.ScheduleApp.Dialog"
+        parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.ScheduleApp.Dialog</item>
+    </style>
+
+    <style name="ShapeAppearance.ScheduleApp.Dialog"
+        parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/card_corner_large</item>
+    </style>
+
+    <!-- 动态取色变体（保留，默认不启用，见上方说明） -->
+    <style name="Theme.ScheduleApp.Dynamic"
+        parent="Theme.Material3Expressive.DynamicColors.DayNight.NoActionBar">
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:navigationBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">?attr/isLightTheme</item>
+    </style>
+
+    <style name="ShapeAppearance.ScheduleApp.Medium" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.ScheduleApp.Large" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <!--
+      BottomSheet 圆角样式（ADR-076）。
+      ⚠️ 不配这个的话，M3 的 BottomSheetDialog 默认用直角方底，
+         与"底部升起"的现代观感不符。
+    -->
+    <style name="ThemeOverlay.GzuSchedule.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.GzuSchedule.BottomSheet</item>
+    </style>
+
+    <style name="Widget.GzuSchedule.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.GzuSchedule.BottomSheet</item>
+        <item name="backgroundTint">?attr/colorSurfaceContainerLow</item>
+    </style>
+
+    <style name="ShapeAppearance.GzuSchedule.BottomSheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">24dp</item>
+        <item name="cornerSizeTopRight">24dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+</resources>

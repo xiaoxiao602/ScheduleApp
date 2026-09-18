@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  页面标题统一样式（ADR-067）。
+
+  ⚠️⚠️ 用户反馈：「广软课程表 设置 周课表 字体大小粗细颜色全部统一」。
+
+  问题现状（三个页面三种写法，必然不一致）：
+     今天页   「广软课程表」 → TextView  21sp bold   （没写 color，继承黑色）
+     周课表页 「周课表」     → TextView  28sp bold   textColorPrimary
+     设置页   「设置」       → MaterialToolbar + M3 默认 TitleLarge（约 22sp）
+
+  同一层级的页面标题用了 3 个不同字号（21 / 28 / 22）、
+  两种实现（TextView / Toolbar）—— 切换时视觉上会"跳"。
+
+  ── 统一方案 ─────────────────────────────
+  抽出一个共用样式，三个页面都引用它。**改这一处，三页同步变**。
+
+  取值依据：
+     · 28sp 太大（周课表那个明显压过其他页）
+     · 21sp 偏小（今天页那个显得弱）
+     · 取 **24sp** —— Material 3 的 headlineSmall 档位，
+       在手机上是"页面主标题"的标准尺寸，三页统一后力度一致。
+     · bold + letterSpacing -0.01：中文标题收紧一点更精神，
+       与 M3 的标题字距原则一致。
+     · 颜色用 **colorOnSurface**（不是 textColorPrimary）：
+       M3 里 colorOnSurface 是"表面上的主文字色"，语义更准，
+       且已按深浅主题成对定义，不会出现夜间看不清。
+
+  ⚠️ 设置页的标题是 MaterialToolbar，它的标题**不能直接用 TextView 样式**，
+     要通过 `app:titleTextAppearance` 引用（见 fragment_settings.xml）。
+     这是本次统一的另一个要点：Toolbar 的标题外观也要走同一个样式。
+-->
+<resources>
+
+    <style name="TextAppearance.GzuSchedule.PageTitle" parent="">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+</resources>

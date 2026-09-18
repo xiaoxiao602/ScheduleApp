@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dock 配色（ADR-037）—— 浅色主题。
+
+  ⚠️ 改为**不透明**（用户要求「取消模糊，改成不透明的」）：
+  alpha 从 0x8C(55%) 提到 0xFF(100%)。
+  滑块颜色**保持不变**（用户明确要求「滑块不变」）。
+-->
+<resources>
+    <!-- 滑块填充：半透明主题蓝（保持不变） -->
+    <color name="dock_slider_fill">#594A7FD4</color>
+    <!-- 滑块描边：半透明亮蓝（保持不变） -->
+    <color name="dock_slider_stroke">#8C7BA4DC</color>
+    <!-- 选中文字：深蓝 -->
+    <color name="dock_text_selected">#08306B</color>
+    <!-- 未选中文字：中性灰 -->
+    <color name="dock_text_unselected">#5F6368</color>
+    <!-- Dock 背景：**不透明**（取消模糊后必须实心，否则透出下面的内容会显脏） -->
+    <color name="dock_bar_bg">#FFF7F9FC</color>
+</resources>

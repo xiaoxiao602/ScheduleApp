@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 课程配色 · 夜间（ADR-063：深底 + 强色条 + 浅字）。 -->
+<resources>
+    <color name="course_1">#5B9BFF</color>
+    <color name="course_2">#3ED9C4</color>
+    <color name="course_3">#66D16B</color>
+    <color name="course_4">#BCD140</color>
+    <color name="course_5">#FFB84D</color>
+    <color name="course_6">#FF6B6B</color>
+    <color name="course_7">#FF6BB8</color>
+    <color name="course_8">#A98BFF</color>
+    <color name="course_9">#4FC3F7</color>
+    <color name="course_10">#A3C43F</color>
+
+    <color name="course_cell_title">#FFE8EAED</color>
+    <color name="course_cell_meta">#FF9AA2AE</color>
+    <color name="course_cell_text">#FFE8EAED</color>
+    <color name="course_cell_bg">#FF1E2126</color>
+    <color name="course_card_stroke">#1FFFFFFF</color>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  课表专用配色（ADR-029）—— 浅色主题。
+
+  ⚠️ 改为跟随主题（不再硬编码纯白）：
+  之前课表固定白底、其他页跟随主题 → 切换时跳色，用户反馈「背景不统一」。
+  现在课表的底色/线色/文字色都成对定义在 values 与 values-night。
+-->
+<resources>
+    <!-- 课表区域底色：与主题 surface 一致（浅色=近白） -->
+    <color name="schedule_surface">#F0F2F7</color>
+
+    <!-- 网格线：浅灰描边（只画线，不填格） -->
+    <color name="schedule_grid_line">#E0E3E8</color>
+
+    <!-- 左侧时间列文字（浅灰文字） -->
+    <color name="schedule_time_text">#9AA0A6</color>
+
+    <!-- 表头文字（非今天）：中灰 -->
+    <color name="schedule_header_text">#5F6368</color>
+</resources>
