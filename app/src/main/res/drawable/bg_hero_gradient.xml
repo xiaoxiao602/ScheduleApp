@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  首页信息卡渐变背景（ADR-019）。
+
+  从品牌蓝（左上）渐变到稍亮的蓝（右下），
+  产生「有光源」的层次感 —— 比纯色块更现代，且成本极低（无模糊、无阴影开销）。
+
+  角度 45° 让渐变沿对角线走，视觉上更自然。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:startColor="#06459B"
+        android:centerColor="#1057BC"
+        android:endColor="#2E74D6"
+        android:type="linear" />
+</shape>

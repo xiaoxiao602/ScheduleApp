@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      课表卡片配色。
+      用固定色而非主题色：课表需要"一眼区分不同课程"，
+      而 M3 主题色阶层次相近，全用 primaryContainer 会糊成一片。
+      这些值在浅色/深色下都保持可读（文字用深色）。
+    -->
+    <!--
+      课程卡片配色已迁到 values/course_colors.xml（ADR-018）。
+      此处不再重复定义，避免资源重名。
+    -->
+
+
+    <!-- 启动图标底色：纯白（用户要求「白底加学校 logo」） -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

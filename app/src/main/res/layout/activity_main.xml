@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  主界面（ADR-032）—— Dock 真正独立悬浮。
+
+  ⚠️ 修「Dock 飞天挡住所有内容」的根因：
+  之前用 ConstraintLayout，FragmentContainer 与 Dock 互相约束；
+  而 DockBarView 内部（merge 里的子 View）误用 match_parent，
+  把它自身撑到全屏高度 → 变成一个盖住一切的巨大方块。
+
+  ✅ 正确架构（Android 悬浮 Dock 的标准做法）：
+  用 FrameLayout 做叠层容器 ——
+    * 第 1 层：FragmentContainer，铺满全屏（内容层）
+    * 第 2 层：Dock，layout_gravity="bottom"（悬浮层）
+  FrameLayout 天然按添加顺序叠放，后者在上，无需 elevation 技巧。
+
+  这样 Dock 就是「一张浮在内容之上的圆角卡片」，
+  不参与任何内容布局，也不会被内容挤压。
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <!-- ① 内容层：铺满全屏，独立于 Dock -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!--
+      ② 悬浮层：Dock 独立浮在内容之上。
+      layout_gravity=bottom 让它贴底居中，横向留边由 margin 控制。
+      ⚠️ 高度必须是 wrap_content —— 子 View 不得用 match_parent。
+    -->
+    <com.gzuschedule.app.ui.widget.DockBarView
+        android:id="@+id/dockBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp" />
+
+</FrameLayout>

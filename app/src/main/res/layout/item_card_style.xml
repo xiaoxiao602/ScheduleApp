@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  卡片样式选项行（ADR-069）。
+
+  每行 = 一个样式：
+    [预览卡片]  样式名
+                说明文字
+                (右侧) 选中勾
+
+  ⚠️ 用**真实卡片预览**而不是纯文字选项：
+     三种样式的区别是视觉效果，文字描述（"整块课程色"/"白底+色条"）
+     远不如直接画一个缩小版卡片直观。用户一眼就能选。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="14dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- 预览卡片（模拟真实课程卡片） -->
+    <!--
+      ⚠️⚠️ ADR-071 修「点不了」：
+        MaterialCardView **默认 clickable=true**，会消费触摸事件，
+        导致点在这个预览卡区域时事件**不冒泡**到根 LinearLayout，
+        根上的 setOnClickListener 不触发 → 用户反馈「点不了、没反应」。
+      ✅ 三件套必须同时设：
+        clickable=false / focusable=false / 加 clickable=false 到内部子 View
+        这样触摸事件才会穿透到根节点。
+    -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/previewCard"
+        android:layout_width="72dp"
+        android:layout_height="46dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:duplicateParentState="false"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="1dp"
+        app:strokeWidth="0dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/previewBar"
+                android:layout_width="8dp"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:focusable="false"
+                android:background="#FF1E88E5" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingHorizontal="6dp">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="5dp"
+                    android:background="#FF3A3F47" />
+
+                <View
+                    android:layout_width="28dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="5dp"
+                    android:background="#FFB0B6BE" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- 文字 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="16dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvStyleName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="白底 + 色条" />
+
+        <TextView
+            android:id="@+id/tvStyleDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="12sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="白底 + 左侧粗色条，干净且有辨识度" />
+    </LinearLayout>
+
+    <!-- 选中勾 -->
+    <ImageView
+        android:id="@+id/checkMark"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_check"
+        android:importantForAccessibility="no"
+        app:tint="?attr/colorPrimary"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</LinearLayout>

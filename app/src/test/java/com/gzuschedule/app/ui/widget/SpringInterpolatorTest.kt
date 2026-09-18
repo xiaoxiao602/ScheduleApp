@@ -1,0 +1,80 @@
+package com.gzuschedule.app.ui.widget
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * [SpringInterpolator] 单测（ADR-056）。
+ *
+ * ⚠️ 这是**动画物理正确性**测试 —— 用户要的「Q弹」全靠这条曲线：
+ *    曲线错了会表现为"弹过头""不收敛""不动"。
+ *    纯数学、可测，值得测。
+ */
+class SpringInterpolatorTest {
+
+    @Test
+    fun `起点为 0、终点为 1`() {
+        val s = SpringInterpolator(160f)
+        assertEquals(0f, s.getInterpolation(0f), 1e-4f)
+        assertEquals(1f, s.getInterpolation(1f), 1e-4f)
+    }
+
+    @Test
+    fun `越界输入被夹住（不产生荒谬值）`() {
+        val s = SpringInterpolator(160f)
+        assertEquals(0f, s.getInterpolation(-0.5f), 1e-4f)
+        assertEquals(1f, s.getInterpolation(1.5f), 1e-4f)
+    }
+
+    @Test
+    fun `中途有过冲（值超过 1）—— 这就是「Q弹」`() {
+        val s = SpringInterpolator(220f)   // 大阻尼 = 强回弹
+        val overshoots = (1..99).map { s.getInterpolation(it / 100f) }
+        assertTrue(
+            "应在过程中出现 >1 的值（过冲），实际最大 ${overshoots.max()}",
+            overshoots.max() > 1.0f,
+        )
+    }
+
+    @Test
+    fun `小阻尼时几乎不过冲（干脆利落）`() {
+        val s = SpringInterpolator(100f)   // 阻尼滑块最小值
+        val maxV = (1..99).map { s.getInterpolation(it / 100f) }.max()
+        assertTrue("阻尼 100 时过冲应很小，实际 $maxV", maxV < 1.08f)
+    }
+
+    @Test
+    fun `阻尼越大过冲越明显（映射方向正确）`() {
+        fun peak(d: Float) = (1..99).map { SpringInterpolator(d).getInterpolation(it / 100f) }.max()
+        val low = peak(100f)
+        val high = peak(250f)
+        assertTrue("250 的过冲($high) 应大于 100 的($low)", high > low)
+    }
+
+    @Test
+    fun `曲线大致单调推进（不会卡在中间）`() {
+        val s = SpringInterpolator(160f)
+        // 后半段应回到 1 附近
+        assertEquals(1f, s.getInterpolation(0.95f), 0.05f)
+    }
+
+    @Test
+    fun `速度曲线起点和终点为 0`() {
+        assertEquals(0f, SpringInterpolator.normalizedVelocity(0f), 1e-4f)
+        assertEquals(0f, SpringInterpolator.normalizedVelocity(1f), 1e-4f)
+    }
+
+    @Test
+    fun `速度曲线在中段达到峰值 1`() {
+        val peak = (1..99).map { SpringInterpolator.normalizedVelocity(it / 100f) }.max()
+        assertTrue("速度峰值应接近 1，实际 $peak", peak > 0.9f)
+    }
+
+    @Test
+    fun `速度曲线始终在 0 到 1 之间（不会把滑块拉爆）`() {
+        val vs = (0..100).map { SpringInterpolator.normalizedVelocity(it / 100f) }
+        assertTrue("不应出现负速度 ${vs.min()}", vs.min() >= 0f)
+        assertTrue("不应超过 1：${vs.max()}", vs.max() <= 1.0001f)
+    }
+}

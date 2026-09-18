@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  卡片与弹窗的中性色阶（ADR-050）。
+
+  ⚠️ 用户反馈：「弹窗 和设置页的卡片 颜色看着不高级」。
+
+  根因：之前一律用 `?attr/colorSurfaceContainerHigh` —— M3 的 surfaceContainerHigh
+  是**带灰调的容器色**，大面积铺开显得"塑料灰"，缺乏层次。
+
+  改进做法（更接近 iOS / Material 3 新版观感）：
+    * 主内容卡片用**接近纯白**的 surface（不是灰调容器色）
+    * 用**极细描边**（hairline）替代灰底来区分边界 —— 更精致、更"高级"
+    * 阴影极浅（1dp），营造"浮起"而非"凹陷"
+    * 深色模式同理：用略亮的 surface + 淡描边
+-->
+<resources>
+
+    <!-- ============ 浅色 ============ -->
+    <!-- 卡片底：接近纯白，而非灰调 -->
+    <color name="card_surface">#FFFFFFFF</color>
+    <!-- 卡片描边：极浅的冷灰，仅用于勾轮廓 -->
+    <color name="card_stroke">#14000000</color>
+    <!-- 次级区块底（如内嵌信息区）：微微下沉 -->
+    <color name="card_surface_subtle">#FFF7F8FA</color>
+
+    <!-- 弹窗底：与卡片同色，保持一致的"高级白" -->
+    <color name="dialog_surface">#FFFFFFFF</color>
+    <color name="dialog_stroke">#12000000</color>
+
+    <!--
+      课程卡片底（浅色模式用，ADR-064）。
+      ⚠️ 与 card_surface 同为近白，但独立命名 —— 课程卡片将来可能单独调色，
+         共用的话改一处会牵连弹窗/设置页。
+    -->
+    <color name="course_card_surface">#FFFFFFFF</color>
+
+</resources>

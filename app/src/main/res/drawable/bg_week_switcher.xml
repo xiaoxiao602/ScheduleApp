@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  周次切换条背景（ADR-075）。
+
+  ⚠️ 用 surfaceContainerHigh 而不是纯白：
+     整条是"一个控件"的观感，需要比页面背景略亮/略沉才能看出边界。
+     纯白在浅灰底上会显得很"飘"，与页面其他卡片打架。
+
+  ⚠️ 圆角 22dp = 高度 44dp 的一半 → 完全胶囊形。
+     这是 M3 里 toggle 类控件的标准形状。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHigh" />
+    <corners android:radius="22dp" />
+</shape>

@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="?attr/colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="96dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorSurface"
+            app:title="设置"
+            app:titleTextAppearance="@style/TextAppearance.GzuSchedule.PageTitle" />
+
+        <!--
+          ===== 我的（ADR-012 / ADR-045）=====
+          ⚠️ ADR-045：改为**纯白卡 + 轻阴影**，与页面浅灰背景分离。
+          优化建议指出：「颜色和下方背景融为一体，建议加轻微阴影或纯白背景，
+          使其与页面浅灰背景区分开，增强层次感」。
+        -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/avatarProfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="@dimen/card_corner_medium"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/card_surface"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/card_stroke"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <!-- 头像本体不再单独可点 —— 整张卡都可点（ADR-046） -->
+                <com.gzuschedule.app.ui.widget.AvatarView
+                    android:id="@+id/avatarProfileImage"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:importantForAccessibility="no" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvDisplayName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        tools:text="李萧宇" />
+
+                    <TextView
+                        android:id="@+id/tvStudentMeta"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:textSize="12sp"
+                        android:alpha="0.6"
+                        android:maxLines="2"
+                        tools:text="2620926205 · 智能科学与技术(AI创新实验班)" />
+                </LinearLayout>
+
+                <!-- 右侧箭头：提示整张卡可点（进入个人资料编辑） -->
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:importantForAccessibility="no"
+                    android:alpha="0.45" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--
+          ⚠️ ADR-046：原先此处竖排的三个按钮（修改显示名 / 更换头像 / 恢复默认头像）
+          已全部移入**个人资料编辑弹窗**（dialog_profile_edit.xml），
+          点头像卡（avatarProfile）即打开。首屏省下约 150dp。
+        -->
+
+        <!-- ===== 账号与同步 ===== -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="4dp"
+            app:cardCornerRadius="@dimen/card_corner_medium"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/card_surface"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/card_stroke">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tvDataState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="本地数据：课表 32 · 成绩 18 · 考试 3" />
+
+                <TextView
+                    android:id="@+id/tvLastSync"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="13sp"
+                    android:alpha="0.7"
+                    tools:text="上次同步：9月18日 02:30" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="账密仅用于拉取数据，完成后立即丢弃，不保存在手机上。"
+                    android:textSize="11sp"
+                    android:alpha="0.55" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSync"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="16dp"
+                    android:text="登录并同步数据" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== 学业数据（二级入口） ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="22dp"
+            android:text="学业数据"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <!-- ⚠️ ADR-045：改为统一列表行（左图标 + 标题 + 右箭头） -->
+        <include
+            android:id="@+id/btnGrades"
+            layout="@layout/item_settings_row" />
+
+        <include
+            android:id="@+id/btnExams"
+            layout="@layout/item_settings_row" />
+
+        <!-- ===== 学期设置（ADR-013：第一周星期一）===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="18dp"
+            android:text="学期"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <include
+            android:id="@+id/btnFirstMonday"
+            layout="@layout/item_settings_row" />
+
+        <!-- ===== 外观 ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="18dp"
+            android:text="外观"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <include
+            android:id="@+id/btnTheme"
+            layout="@layout/item_settings_row" />
+
+        <!--
+          ===== Dock 外观调节（ADR-033） =====
+          所有尺寸都能自己拖 —— 避免反复"改-装-看"的来回。
+          拖动即时生效（onStopTrackingTouch 时保存并刷新 Dock）。
+        -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDockTuning"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:gravity="start|center_vertical"
+            android:text="Dock 外观调节" />
+
+        <LinearLayout
+            android:id="@+id/dockTuningPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="8dp"
+            tools:visibility="visible">
+
+            <!-- Dock 高度 -->
+            <TextView
+                android:id="@+id/tvDockHeightLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="距屏幕底部 · 35dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderDockHeight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="120" />
+
+            <!-- Dock 圆角 -->
+            <TextView
+                android:id="@+id/tvDockCornerLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="Dock 圆角 · 28dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderDockCorner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="32" />
+
+            <!-- Dock 宽度（左右各留多少） -->
+            <TextView
+                android:id="@+id/tvDockWidthLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="Dock 宽度 · 左右各留 45dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderDockWidth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="120" />
+
+            <!-- Dock 厚度（卡片自身 y 方向的高度） -->
+            <TextView
+                android:id="@+id/tvDockThicknessLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="Dock 厚度 · 58dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderDockThickness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="40"
+                android:valueTo="96" />
+
+            <!-- 滑块高度 -->
+            <TextView
+                android:id="@+id/tvSliderHeightLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="滑块高度 · 48dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderSliderHeight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="24"
+                android:valueTo="60" />
+
+            <!-- 滑块圆角 -->
+            <TextView
+                android:id="@+id/tvSliderCornerLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="滑块圆角 · 24dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderSliderCorner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="32" />
+
+            <!-- 滑块宽度增量 -->
+            <TextView
+                android:id="@+id/tvSliderWidthLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="滑块宽度增量 · 0dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderSliderWidth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="40" />
+
+            <!-- 文字大小 -->
+            <TextView
+                android:id="@+id/tvDockTextSizeLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                tools:text="文字大小 · 16.0sp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderDockTextSize"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="5"
+                android:valueFrom="90"
+                android:valueTo="200" />
+
+            <!-- 滑动时长 -->
+            <TextView
+                android:id="@+id/tvAnimDurationLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:textSize="13sp"
+                tools:text="滑动时长 · 480ms" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderAnimDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="10"
+                android:valueFrom="200"
+                android:valueTo="800" />
+
+            <!-- 阻尼（回弹强度） -->
+            <TextView
+                android:id="@+id/tvDampingLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:textSize="13sp"
+                tools:text="阻尼回弹 · 1.30" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderDamping"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="5"
+                android:valueFrom="100"
+                android:valueTo="250" />
+
+            <!-- 液体变形：拉伸量 -->
+            <TextView
+                android:id="@+id/tvLiquidStretchLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:textSize="13sp"
+                tools:text="液体拉伸 · 22%" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderLiquidStretch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="60" />
+
+            <!-- 液体变形：压缩量 -->
+            <TextView
+                android:id="@+id/tvLiquidSquashLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                tools:text="液体压缩 · 30%" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderLiquidSquash"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="80" />
+
+            <!-- 恢复默认 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDockReset"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="恢复默认" />
+        </LinearLayout>
+
+        <!-- ===== 数据管理 ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="18dp"
+            android:text="数据管理"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <include
+            android:id="@+id/btnClearData"
+            layout="@layout/item_settings_row" />
+
+        <include
+            android:id="@+id/btnDiagnostics"
+            layout="@layout/item_settings_row" />
+
+        <TextView
+            android:id="@+id/tvDiagnostics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="4dp"
+            android:background="#11000000"
+            android:fontFamily="monospace"
+            android:padding="10dp"
+            android:textIsSelectable="true"
+            android:textSize="10sp"
+            android:visibility="gone" />
+
+        <!-- ===== 关于 ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="18dp"
+            android:text="关于"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="6dp"
+            android:text="广软课程表\n开发者 · XIAOXIAO\n仅供个人使用 · 永久免费"
+            android:textSize="12sp"
+            android:alpha="0.65"
+            android:lineSpacingExtra="3dp" />
+
+    </LinearLayout>
+</ScrollView>

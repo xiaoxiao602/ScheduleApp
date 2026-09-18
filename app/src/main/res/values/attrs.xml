@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DockBarView 自定义属性（ADR-033）。
+
+  目的：让 Dock 的所有关键尺寸都能在 **XML 里直接调**，
+  也能在应用内「设置 → 外观」用滑块实时调（见 DockTuningStore）。
+
+  ⚠️ 必须包在 <declare-styleable> 里，Kotlin 侧才能通过
+  R.styleable.DockBarView_xxx 访问（裸 <attr> 不会生成 styleable 索引）。
+
+  ⚠️ 默认值 = 当前观感，所以不写属性时行为与之前完全一致（零回归）。
+
+  用法示例：
+    <com.gzuschedule.app.ui.widget.DockBarView
+        app:dockHeight="52dp"
+        app:dockCorner="26dp"
+        app:dockSliderHeight="34dp"
+        app:dockSliderExtraWidth="2dp"
+        app:dockTextSize="13.5sp" />
+-->
+<resources>
+
+    <declare-styleable name="DockBarView">
+
+        <!-- ============ Dock 本体 ============ -->
+
+        <!-- Dock 高度（含上下内边距）。默认 56dp -->
+        <attr name="dockHeight" format="dimension" />
+
+        <!-- Dock 圆角半径。默认 28dp -->
+        <attr name="dockCorner" format="dimension" />
+
+        <!-- 投影高度（悬浮感强弱）。默认 8dp -->
+        <attr name="dockElevation" format="dimension" />
+
+        <!-- 背景不透明度 0..255。默认取 color/dock_bar_bg -->
+        <attr name="dockBackgroundAlpha" format="integer" />
+
+        <!-- ============ 滑块 ============ -->
+
+        <!-- 滑块高度。默认 36dp -->
+        <attr name="dockSliderHeight" format="dimension" />
+
+        <!-- 滑块圆角半径。默认 18dp -->
+        <attr name="dockSliderCorner" format="dimension" />
+
+        <!-- 滑块比文字额外宽出的量（左右各一半）。默认 8dp -->
+        <attr name="dockSliderExtraWidth" format="dimension" />
+
+        <!-- ============ 文字 ============ -->
+
+        <!-- 标签文字大小。默认 13.5sp -->
+        <attr name="dockTextSize" format="dimension" />
+
+    </declare-styleable>
+
+</resources>

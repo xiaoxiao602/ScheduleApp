@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  周课表 · 课程卡片**内容**布局（ADR-074）。
+
+  ⚠️⚠️ 重要：根节点是普通 LinearLayout，**不是** MaterialCardView。
+     历史坑：早期这个 XML 是独立卡片，后来渲染改成「代码里 new 一张
+     MaterialCardView，再把这布局塞进去」——但 XML 根节点没跟着改。
+     于是变成**两层 MaterialCardView 嵌套**：外层设了课程色底，
+     内层（本文件根节点）的白底把它**完全盖住**
+     → 用户切「彩色填充」看不到任何效果，永远像纯白底。
+
+  ✅ 现在根节点是 LinearLayout，**颜色完全由代码控制**：
+     · 卡片底色  → ScheduleFragment 设外层 MaterialCardView
+     · 左侧色条  → 代码设 accentBar 的背景色 + 宽度
+     · 文字颜色  → 随卡样式变（白字/深字见 course_colors.xml）
+
+  ⚠️ 本文件里**不要**再出现 app:cardBackgroundColor / strokeColor /
+     @color/course_cell_bg 之类的写死颜色 —— 那会和代码里的动态设置打架。
+
+  ── 排版（保持 ADR-063 的信息分组）────────────────
+     ① 课名（17sp 粗体）—— 主角
+        └ 与下方留 10dp 大间距，切开"标题区"和"详情区"
+     ② 时间行（13sp）
+     ③ 地点 / 教师（12.5sp，间距 6dp / 4dp）
+     间距由大到小 → 阅读时自然形成「主 → 次 → 细节」的引导。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <!-- 左侧色条：宽度与颜色都由代码控制（ACCENT_BAR_WIDTH_DP） -->
+    <View
+        android:id="@+id/accentBar"
+        android:layout_width="6dp"
+        android:layout_height="match_parent"
+        tools:background="#FF1E88E5" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="16dp"
+        android:paddingVertical="14dp">
+
+        <!-- ① 课名（主角） -->
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:letterSpacing="-0.01"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="大学英语III（听说进阶）" />
+
+        <!-- ② 时间（节次 + 周次）—— 与课名留大间距 -->
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="13sp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="15:30 - 16:50   1-9周" />
+
+        <!-- ③ 地点 + 教师：从属信息，彼此靠近 -->
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textSize="12.5sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="U102" />
+
+        <TextView
+            android:id="@+id/tvTeacher"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12.5sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="蔡雨晨" />
+
+    </LinearLayout>
+
+</LinearLayout>

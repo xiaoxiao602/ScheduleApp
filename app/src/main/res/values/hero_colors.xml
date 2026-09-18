@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  首页信息卡（渐变卡）专用配色（ADR-021）。
+
+  ⚠️ 为什么单独定义：这张卡是**固定的深蓝渐变**（不随主题变），
+  所以卡上的文字/按钮必须用**固定白系**，不能走主题色槽 ——
+  否则深色模式下主题色变浅，叠在深蓝渐变上就看不清（用户反馈的「灰字看不见」）。
+-->
+<resources>
+    <!-- 卡片上的文字：纯白 -->
+    <color name="hero_on_color">#FFFFFFFF</color>
+    <!-- 卡片上按钮的底色：半透明白（在深蓝上有层次） -->
+    <color name="hero_button_bg">#33FFFFFF</color>
+</resources>

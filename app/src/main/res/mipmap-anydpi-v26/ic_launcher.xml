@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  自适应图标（Android 8.0+ / minSdk 26）。
+  白底 + 校徽前景。系统会按各厂商形状（圆/方/水滴）裁切。
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 白底（用户要求） -->
+    <background android:drawable="@color/ic_launcher_background" />
+    <!-- 校徽：需放在 66% 安全区内，避免被裁掉 -->
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <!-- 部分启动器支持单色图标（Android 13+ 主题图标） -->
+    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>

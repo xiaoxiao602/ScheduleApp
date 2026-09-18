@@ -1,0 +1,308 @@
+package com.gzuschedule.app.ui.color
+
+import android.app.AlertDialog
+import android.graphics.Color
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.gzuschedule.app.data.local.AppDatabase
+import com.gzuschedule.app.data.local.CardStyleStore
+import com.gzuschedule.app.data.local.LocalScheduleRepository
+import com.gzuschedule.app.databinding.DialogColorPickerBinding
+import com.gzuschedule.app.databinding.FragmentCourseColorBinding
+import com.gzuschedule.app.databinding.ItemColorSwatchBinding
+import com.gzuschedule.app.databinding.ItemCourseColorBinding
+import com.gzuschedule.app.domain.CourseColorAssigner
+import com.gzuschedule.app.domain.CoursePalette
+import com.gzuschedule.app.domain.model.Course
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+
+/**
+ * 课程配色页面（ADR-065）。
+ *
+ * 列表展示本学期全部课程，每行显示当前颜色；点行 → 选色。
+ *
+ * ⚠️ 颜色优先级（与 ScheduleFragment 必须一致，否则预览与实物不符）：
+ *     ① 用户自定义（CardStyleStore.customColorOf）
+ *     ② 自动分配（CourseColorAssigner + 默认调色板）
+ *   本页显示 `effectiveColor()` 的结果 —— 即**用户实际会看到的颜色**，
+ *   而不是只显示自定义值（否则没自定义过的课会显示成无色）。
+ */
+class CourseColorFragment : Fragment() {
+
+    private var _binding: FragmentCourseColorBinding? = null
+    private val binding get() = _binding!!
+
+    private lateinit var store: CardStyleStore
+    private lateinit var repo: LocalScheduleRepository
+
+    /** 当前学期全部课程（按课程名去重后的列表，用于展示一行一门课）。 */
+    private var courses: List<Course> = emptyList()
+
+    /** 课程名 → 自动分配的下标（与课表页算法一致）。 */
+    private var autoColors: Map<String, Int> = emptyMap()
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = FragmentCourseColorBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        store = CardStyleStore(requireContext())
+        repo = LocalScheduleRepository(AppDatabase.get(requireContext()))
+
+        binding.btnResetColors.setOnClickListener { resetAllColors() }
+
+        // ⚠️ 持续订阅：同步后课程变化，本页应自动刷新
+        viewLifecycleOwner.lifecycleScope.launch {
+            repo.observeTerms().collect { terms ->
+                val term = terms.firstOrNull().orEmpty()
+                if (term.isBlank()) {
+                    courses = emptyList()
+                } else {
+                    courses = repo.observeCourses(term).firstValue().distinctBy { it.name }
+                        .sortedBy { it.name }
+                }
+                // 自动分配色 —— 与 ScheduleFragment 用同一算法，保证预览一致
+                autoColors = CourseColorAssigner.assign(
+                    courses.map { it.name },
+                    CoursePalette.AUTO_ASSIGN.size,
+                )
+                renderList()
+            }
+        }
+    }
+
+    /**
+     * 取 Flow 的**当前值**一次（本页只需快照）。
+     *
+     * ⚠️⚠️ 这里曾经写错成：
+     *   ```
+     *   var out = emptyList<Course>()
+     *   this.collect { out = it; return@collect }   // ✗ 永久挂起
+     *   return out
+     *   ```
+     *   `return@collect` 只是从这个 **lambda** 返回，不是结束 `collect` 本身。
+     *   而 Room 的 Flow 是**无限热流**（数据不变时也永不 complete），
+     *   于是协程永久挂起在 collect 里 → 后面的 renderList() 永远执行不到
+     *   → 整个「课程配色」页空白。
+     *
+     *   用户反馈「用不了 / 页面空白」正是这个原因。
+     *
+     * ✅ 正确做法：`first()` —— 取第一个值后就取消订阅，立即返回。
+     */
+    private suspend fun kotlinx.coroutines.flow.Flow<List<Course>>.firstValue(): List<Course> =
+        this.first()
+
+    /**
+     * 某门课当前生效的颜色（自定义优先，否则自动分配）。
+     *
+     * ⚠️ 提取为独立方法：列表圆点和选色弹窗的"当前选中"标记都用它，
+     *    两处逻辑必须完全一致，否则会显示矛盾。
+     */
+    private fun effectiveColor(courseName: String): Int {
+        store.customColorOf(courseName)?.let { return it }
+        val idx = autoColors[courseName]
+            ?: CourseColorAssigner.assignFallback(courseName, CoursePalette.AUTO_ASSIGN.size)
+        return CoursePalette.AUTO_ASSIGN[idx % CoursePalette.AUTO_ASSIGN.size]
+    }
+
+    private fun renderList() {
+        binding.courseList.removeAllViews()
+
+        if (courses.isEmpty()) {
+            binding.courseList.addView(
+                android.widget.TextView(requireContext()).apply {
+                    text = "还没有课程数据，请先在设置页同步"
+                    textSize = 14f
+                    gravity = android.view.Gravity.CENTER
+                    setPadding(0, 64, 0, 0)
+                    setTextColor(Color.GRAY)
+                },
+            )
+            binding.btnResetColors.visibility = View.GONE
+            return
+        }
+
+        for (course in courses) {
+            val row = ItemCourseColorBinding.inflate(layoutInflater, binding.courseList, false)
+            row.tvCourseName.text = course.name
+            // 圆点用动态背景色（颜色是任意 ARGB，不是资源）
+            row.colorDot.background.setTint(effectiveColor(course.name))
+            row.root.setOnClickListener { showColorPicker(course.name) }
+            binding.courseList.addView(row.root)
+        }
+
+        binding.btnResetColors.visibility =
+            if (store.hasAnyCustomColor()) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * 选色弹窗（ADR-065）：预设色板 + 自定义色轮。
+     *
+     * ⚠️ 预设网格是**代码动态生成**的（不是 XML 写 24 个格子）：
+     *    色值来自 CoursePalette.PRESETS，若在 XML 里硬编码就会有两份真相，
+     *    改一个忘一个。动态生成保证"色板定义唯一"。
+     */
+    private fun showColorPicker(courseName: String) {
+        val dlgBinding = DialogColorPickerBinding.inflate(layoutInflater)
+        val current = effectiveColor(courseName)
+
+        // ---- 构建 4 列网格 ----
+        val grid = dlgBinding.presetGrid
+        val perRow = 4
+        var row: LinearLayout? = null
+
+        CoursePalette.PRESETS.forEachIndexed { i, color ->
+            if (i % perRow == 0) {
+                row = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    )
+                }
+                grid.addView(row)
+            }
+            val cell = ItemColorSwatchBinding.inflate(layoutInflater, row, false)
+            cell.root.background.setTint(color)
+            // 当前色加一圈深色描边，便于识别「现在用的是哪个」
+            if (color == current) {
+                cell.root.foreground = androidx.core.content.ContextCompat.getDrawable(
+                    requireContext(),
+                    com.gzuschedule.app.R.drawable.bg_color_swatch_selected,
+                )
+            }
+            cell.root.setOnClickListener {
+                store.setCustomColor(courseName, color)
+                renderList()
+                it.rootView.let { /* 关闭弹窗在下面处理 */ }
+                pendingDialog?.dismiss()
+            }
+            row!!.addView(cell.root)
+        }
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle(courseName)
+            .setView(dlgBinding.root)
+            .setNeutralButton("恢复自动") { _, _ ->
+                store.setCustomColor(courseName, null)
+                renderList()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+
+        dlgBinding.btnCustomColor.setOnClickListener {
+            dialog.dismiss()
+            showHsvPicker(courseName, current)
+        }
+
+        pendingDialog = dialog
+        dialog.show()
+    }
+
+    /** 供预设格子点击时关闭弹窗（闭包内拿不到 dialog 引用）。 */
+    private var pendingDialog: AlertDialog? = null
+
+    /**
+     * HSV 色轮取色（ADR-065 的「B 方案」）。
+     *
+     * ⚠️ 用系统自带的 ColorPickerView 而不是第三方库：
+     *    项目原则是不为单一功能引依赖（参考之前 Haze 的教训）。
+     *    Android 原生没有公开的 HSV 取色控件，故这里用**三个 SeekBar**
+     *    分别调 色相/饱和度/明度 —— 实现简单、无依赖、可精确调。
+     *    实时预览一个小色块。
+     */
+    private fun showHsvPicker(courseName: String, initial: Int) {
+        val ctx = requireContext()
+        val dp = resources.displayMetrics.density
+
+        val hsv = FloatArray(3)
+        Color.colorToHSV(initial, hsv)
+
+        val preview = View(ctx).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                (56 * dp).toInt(),
+            ).apply { bottomMargin = (12 * dp).toInt() }
+            background = androidx.core.content.ContextCompat.getDrawable(
+                ctx, com.gzuschedule.app.R.drawable.bg_color_swatch,
+            )
+            background.setTint(initial)
+        }
+
+        fun makeSlider(label: String, max: Float, value: Float, onChange: (Float) -> Unit):
+            Pair<LinearLayout, com.google.android.material.slider.Slider> {
+            val slider = com.google.android.material.slider.Slider(ctx).apply {
+                this.valueFrom = 0f
+                this.valueTo = max
+                this.value = value
+                addOnChangeListener { _, v, _ -> onChange(v) }
+            }
+            val box = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(android.widget.TextView(ctx).apply {
+                    text = label
+                    textSize = 12f
+                })
+                addView(slider)
+            }
+            return box to slider
+        }
+
+        fun refresh() {
+            preview.background.setTint(Color.HSVToColor(hsv))
+        }
+
+        val (hBox, _) = makeSlider("色相", 360f, hsv[0]) { hsv[0] = it; refresh() }
+        val (sBox, _) = makeSlider("饱和度", 1f, hsv[1]) { hsv[1] = it; refresh() }
+        val (vBox, _) = makeSlider("明度", 1f, hsv[2]) { hsv[2] = it; refresh() }
+
+        val content = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding((20 * dp).toInt(), (8 * dp).toInt(), (20 * dp).toInt(), 0)
+            addView(preview)
+            addView(hBox)
+            addView(sBox)
+            addView(vBox)
+        }
+
+        AlertDialog.Builder(ctx)
+            .setTitle("自定义颜色")
+            .setView(content)
+            .setPositiveButton("应用") { _, _ ->
+                store.setCustomColor(courseName, Color.HSVToColor(hsv))
+                renderList()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun resetAllColors() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("恢复默认配色")
+            .setMessage("将清除所有课程的单独配色，回到自动分配。")
+            .setPositiveButton("恢复") { _, _ ->
+                store.clearAllCustomColors()
+                renderList()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        pendingDialog = null
+        _binding = null
+    }
+}

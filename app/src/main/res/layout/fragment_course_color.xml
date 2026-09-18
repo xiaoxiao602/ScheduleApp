@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  课程配色二级页（ADR-065）。
+
+  结构：
+    · 说明文字（解释自动分配 vs 手动指定）
+    · 课程列表（每行：课程名 + 当前颜色圆点）
+    · 「恢复默认配色」按钮（仅当有自定义色时显示）
+
+  ⚠️ 用 ScrollView 而不是 RecyclerView：
+     课程数量是个位数到十几个，一次全渲染没有性能问题；
+     引入 RecyclerView 要多写 Adapter + DiffUtil，收益为零。
+     这与项目里其他简单列表的处理保持一致。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
+
+        <!-- 说明 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp"
+            android:textSize="13sp"
+            android:lineSpacingExtra="3dp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:text="默认按课程自动分配颜色。点任意一门课可单独指定它的颜色。" />
+
+        <!-- 课程列表 -->
+        <LinearLayout
+            android:id="@+id/courseList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <!-- 恢复默认（有自定义色时显示） -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnResetColors"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:text="恢复默认配色"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</ScrollView>

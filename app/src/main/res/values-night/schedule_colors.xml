@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  课表专用配色 · 深色主题（ADR-029）。
+
+  ⚠️ 关键：网格线和文字必须**在深底上可读**。
+  浅色值（#E0E3E8 浅灰线 / #5F6368 中灰字）在深底上会看不清，
+  故深色下换成更亮的一档。
+-->
+<resources>
+    <!-- 课表区域底色：与深色 surface 一致 -->
+    <color name="schedule_surface">#0B0D10</color>
+
+    <!-- 网格线：深色下用较亮的灰，保证可见 -->
+    <color name="schedule_grid_line">#3A3E45</color>
+
+    <!-- 左侧时间列文字：深色下用中亮灰 -->
+    <color name="schedule_time_text">#9AA0A6</color>
+
+    <!-- 表头文字（非今天）：深色下用浅灰 -->
+    <color name="schedule_header_text">#C4C6CF</color>
+</resources>

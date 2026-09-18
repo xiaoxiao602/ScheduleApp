@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 色板格子（ADR-065）。正方形，颜色由代码设，选中时加白色描边。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="0dp"
+    android:layout_height="46dp"
+    android:layout_weight="1"
+    android:layout_margin="4dp"
+    android:background="@drawable/bg_color_swatch"
+    tools:background="#FF1E88E5" />

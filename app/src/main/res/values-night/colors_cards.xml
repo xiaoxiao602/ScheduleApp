@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 卡片/弹窗中性色 —— 深色模式（ADR-050）。 -->
+<resources>
+    <!-- 深色下"高级"的关键：底色**比纯黑亮一点**，靠描边与阴影分层，而不是靠灰度差 -->
+    <color name="card_surface">#FF1C1F24</color>
+    <color name="card_stroke">#1FFFFFFF</color>
+    <color name="card_surface_subtle">#FF23262C</color>
+
+    <color name="dialog_surface">#FF1C1F24</color>
+    <color name="dialog_stroke">#1FFFFFFF</color>
+</resources>

@@ -1,0 +1,24 @@
+pluginManagement {
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        google()
+        // ⚠️ ADR-030：Haze 等第三方库在 Maven Central 上，阿里云 public 镜像
+        // 同步不全时会解析失败。显式加上中央仓库作为兜底。
+        mavenCentral()
+        maven { url 'https://repo1.maven.org/maven2' }
+    }
+}
+rootProject.name = "ScheduleApp"
+include ':app'

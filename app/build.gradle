@@ -1,0 +1,118 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    // ⚠️ ADR-049：由 kapt 换成 KSP。
+    //    kapt 在本工程持续报「类重复: TodayUiState / TodayViewModel / AvatarView」
+    //    —— 这些类**没有任何注解**，不需要处理；kapt 生成的 Java stub 与文件门面
+    //    相互冲突（已知 bug，clean 也清不掉）。
+    //    KSP 直接读写 Kotlin 源码，不生成 Java stub，问题根治且构建更快。
+    id 'com.google.devtools.ksp'
+    // ⚠️ ADR-078 验证：Compose
+    id 'org.jetbrains.kotlin.plugin.compose'
+}
+
+android {
+    namespace 'com.gzuschedule.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.gzuschedule.app"
+        minSdk 26          // Android 8.0，覆盖绝大多数在用机型
+        targetSdk 35
+        versionCode 1
+        // beta 版本标识：显示为「广软课表 1.0-beta」
+        versionName "1.0-beta"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        viewBinding true
+        // ⚠️ ADR-078 验证：开启 Compose
+        compose true
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+
+    // Material 3 Expressive（1.14.0 为含 expressive 的正式版）
+    implementation 'com.google.android.material:material:1.14.0'
+
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // RecyclerView（成绩/考试列表）
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+    // OkHttp：教务系统 HTTP 通信（CookieJar / 302 跟随）
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    // 凭据加密存储（ADR-011）：Keystore + EncryptedSharedPreferences
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+
+    // 系统照片选择器（ADR-012）：PickVisualMedia，无需存储权限
+    implementation 'androidx.activity:activity-ktx:1.9.3'
+
+    // ViewModel + viewModelScope（lifecycle-viewmodel-ktx 提供 viewModelScope）
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.fragment:fragment-ktx:1.8.5'
+
+    // Room 本地数据库（ADR-005：本地库是唯一持久化数据源）
+    implementation 'androidx.room:room-runtime:2.6.1'
+    implementation 'androidx.room:room-ktx:2.6.1'
+    ksp 'androidx.room:room-compiler:2.6.1'
+
+    // 网络 + 解析（教务系统多为 HTML/JSON 混合，两个都要）
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'org.jsoup:jsoup:1.18.1'
+
+    // 协程
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+
+    // ⚠️ ADR-030 放弃 Haze：实测（Gradle checkDebugAarMetadata）它依赖
+    //    androidx.compose.foundation:1.12.0，进而要求 **AGP 9.1.0+ / compileSdk 37**。
+    //    我们当前 AGP 8.7.3 / compileSdk 35 —— 接入它等于推倒整个工具链，
+    //    代价与「一个 Dock 的视觉效果」完全不成比例（违背可逆性原则）。
+    //    已逐个版本核对 1.1.1~1.7.3 的 POM：全部依赖 Compose，无纯 View 版。
+    //
+    //    改用 Android 官方 API 自行实现局部模糊（见 ui/widget/BlurDockView.kt）：
+    //      * View.setRenderEffect(RenderEffect)  —— API 31+，只作用于该 View
+    //      * PixelCopy 取 Dock 背后的像素 → 模糊 → 铺在下层
+    //    你的设备是 Android 15–17（API 35+），原生支持；低版本自动降级为半透明。
+
+    // ==================== Compose（ADR-078 验证）====================
+    // ⚠️ 目的：验证当前工具链（AGP 8.7.3 / Kotlin 2.0.21 / compileSdk 35）
+    //    能否容纳 Compose。若可，则以后滚轮/毛玻璃/液态玻璃都能直接用成熟库。
+    def composeBom = platform('androidx.compose:compose-bom:2024.09.03')
+    implementation composeBom
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.activity:activity-compose:1.9.3'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+
+    // ⚠️ ADR-079 结论：compose-wheelpicker 要求 compileSdk ≥ 36，
+    //    而 AGP 8.7.3 推荐上限就是 35 —— 引入即推高工具链，与 Haze 同因，故放弃。
+    //    滚轮改用「Compose LazyColumn + 官方吸附 API」自研（见 WeekWheel.kt 说明）。
+
+    testImplementation 'junit:junit:4.13.2'
+}

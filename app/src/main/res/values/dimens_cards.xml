@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  统一的圆角尺寸（ADR-043）。
+
+  ⚠️ 用户要求：「把所有的弹窗都做成和主页大卡片一样的圆角」。
+  之前圆角散落在各处（hero 卡 28dp、次级卡 20dp、弹窗 0dp），
+  现在集中定义，所有卡片与弹窗统一引用，避免再次不一致。
+-->
+<resources>
+    <!-- 主页大卡片（hero）与所有弹窗 -->
+    <dimen name="card_corner_large">28dp</dimen>
+    <!-- 页面内次级卡片 -->
+    <dimen name="card_corner_medium">20dp</dimen>
+    <!-- 小控件（芯片、标签） -->
+    <dimen name="card_corner_small">12dp</dimen>
+</resources>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  个人资料编辑弹窗（ADR-046）。
+
+  ⚠️ 用户反馈：「修改用户名 头像等功能没有图标，还是三行 浪费空间」。
+
+  背景：优化建议第一条就指出 ——
+    「现在的『修改显示名』『更换头像』『恢复默认头像』占据了非常宝贵的
+      首屏空间。建议将这三项收纳。点击顶部的头像卡片直接进入个人资料编辑
+      页面，主页只保留头像、姓名和学号等核心信息。」
+
+  改法：这三项从首屏移入本弹窗，点头像卡片弹出。
+       首屏因此省下约 150dp。
+
+  样式：与主页大卡片同款圆角（28dp）—— 由 DialogCorner 把 Window 背景
+        设透明后，本布局的圆角才会显露。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rounded"
+    android:paddingTop="24dp"
+    android:paddingBottom="12dp">
+
+    <!-- 大头像预览（让用户看清当前头像） -->
+    <com.gzuschedule.app.ui.widget.AvatarView
+        android:id="@+id/dlgAvatar"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="center_horizontal"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/dlgName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="李萧宇" />
+
+    <TextView
+        android:id="@+id/dlgMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:textSize="12sp"
+        android:alpha="0.6"
+        tools:text="2620926205 · 智能科学与技术" />
+
+    <!-- 分隔 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginHorizontal="20dp"
+        android:background="?attr/colorOutlineVariant"
+        android:alpha="0.4" />
+
+    <!-- 三个操作：复用统一列表行（图标 + 文案 + chevron） -->
+    <include
+        android:id="@+id/dlgEditName"
+        layout="@layout/item_settings_row" />
+
+    <include
+        android:id="@+id/dlgPickAvatar"
+        layout="@layout/item_settings_row" />
+
+    <include
+        android:id="@+id/dlgResetAvatar"
+        layout="@layout/item_settings_row" />
+
+    <!--
+      ⚠️ ADR-047：关闭按钮放在**卡片内部**（不用 setPositiveButton ——
+      那会被系统画在卡片之外，且底部留一块空白）。
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnProfileClose"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp"
+        android:text="完成" />
+
+</LinearLayout>
