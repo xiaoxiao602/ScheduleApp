@@ -43,15 +43,37 @@
         android:textColor="?attr/colorOnSurfaceVariant"
         tools:text="学期第一周已设为 2026-08-31（周一）" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnOk"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_gravity="end"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
-        android:minWidth="88dp"
-        android:text="知道了"
-        android:textSize="14sp" />
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <!-- ⚠️ ADR-112：可选的第二按钮（默认 GONE）。
+             用于「检查更新」这类需要跳转外部的场景
+             （用户要求：「点击确定跳转系统浏览器下载」）。 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSecondary"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginEnd="4dp"
+            android:minWidth="88dp"
+            android:textSize="14sp"
+            android:visibility="gone"
+            tools:text="取消"
+            tools:visibility="visible" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnOk"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:minWidth="88dp"
+            android:text="知道了"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
 </LinearLayout>

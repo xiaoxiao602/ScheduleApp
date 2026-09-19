@@ -361,6 +361,67 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    /**
+     * 把 Release 说明里的 Markdown 标记去掉（ADR-112）。
+     *
+     * ⚠️ 弹窗是纯 TextView，不渲染 Markdown ——
+     *    直接显示 `### 修复` / `- xxx` 会很难看。
+     *    这里只做最基本的清理（标题符号、列表符号、粗体星号）。
+     */
+    private fun stripMarkdown(src: String): String =
+        src.split("\n")
+            .map { line ->
+                line.trim()
+                    .removePrefix("#### ").removePrefix("### ")
+                    .removePrefix("## ").removePrefix("# ")
+                    .removePrefix("- ").removePrefix("* ")
+                    .replace("**", "")
+                    .replace("`", "")
+            }
+            .filter { it.isNotBlank() }
+            .joinToString("\n")
+
+    /**
+     * 用系统浏览器打开链接（ADR-112）。
+     *
+     * ⚠️ 用户需求：「点击确定跳转系统浏览器下载」
+     *
+     * ⚠️ 用 ACTION_VIEW 让用户自选浏览器（不硬编码某个浏览器）。
+     *    若设备没有任何浏览器，退化为复制链接到剪贴板并提示 ——
+     *    总比点了没反应好。
+     */
+    private fun openInBrowser(url: String?) {
+        if (url.isNullOrBlank()) {
+            MessageDialog.show(requireContext(), "无法打开", "没有可用的下载地址。")
+            return
+        }
+        val ctx = requireContext()
+        val intent = android.content.Intent(
+            android.content.Intent.ACTION_VIEW,
+            android.net.Uri.parse(url),
+        )
+
+        // ⚠️ 先判断有没有 App 能处理这个 Intent。
+        //    直接 startActivity 在无浏览器设备上会抛 ActivityNotFoundException
+        //    （用 runCatching 兜底也行，但先判断更干净、无异常开销）。
+        val handler = intent.resolveActivity(ctx.packageManager)
+        if (handler == null) {
+            // 没有浏览器 → 复制链接，用户可手动粘到浏览器
+            val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                    as android.content.ClipboardManager
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("下载地址", url))
+            MessageDialog.show(
+                ctx,
+                "没有找到浏览器",
+                "下载地址已复制到剪贴板，可手动粘贴到浏览器打开：\n$url",
+            )
+            return
+        }
+        runCatching { ctx.startActivity(intent) }.onFailure {
+            MessageDialog.show(ctx, "打开失败", "无法启动浏览器。\n\n下载地址：\n$url")
+        }
+    }
+
     private suspend fun renderFirstMonday() {
         val raw = db.metaDao().get(AppDatabase.MetaKeys.FIRST_MONDAY)
         val value = if (raw.isNullOrBlank()) {
@@ -549,16 +610,36 @@ class SettingsFragment : Fragment() {
                 }
 
                 r.hasUpdate -> {
-                    MessageDialog.show(
-                        requireContext(),
-                        "发现新版本 ${r.latestVersion}",
-                        buildString {
-                            append("当前版本：$vName\n")
-                            append("最新版本：${r.latestVersion}\n\n")
-                            r.notes?.takeIf { it.isNotBlank() }?.let {
-                                append("更新内容：\n${it.take(300)}")
-                            }
+                    // ⚠️ ADR-112：弹窗里给出下载地址，点「去下载」跳系统浏览器。
+                    //
+                    //    用户需求：「检查更新那里弹窗里面给安装包下载地址
+                    //              点击确定跳转系统浏览器下载」
+                    //
+                    //    ⚠️ 下载地址优先用 APK 直链（点了直接下载）；
+                    //       若该 Release 没附 APK，退回 Release 页面。
+                    val url = r.apkUrl ?: r.releaseUrl
+
+                    MessageDialog.showWithSecondary(
+                        context = requireContext(),
+                        title = "发现新版本 ${r.latestVersion}",
+                        message = buildString {
+                            append("当前版本：$vName")
+                            append("\n最新版本：${r.latestVersion}")
+
+                            // ⚠️ Release body 是 Markdown，弹窗里不渲染 ——
+                            //    去掉 ## / - 等符号，避免显示成乱码样的原文。
+                            r.notes?.let { stripMarkdown(it) }
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let {
+                                    append("\n\n更新内容：\n")
+                                    append(it.take(160))
+                                }
+
+                            append("\n\n下载地址：\n$url")
                         },
+                        okText = "去下载",
+                        secondaryText = "稍后",
+                        onOk = { openInBrowser(url) },
                     )
                 }
 

@@ -33,6 +33,25 @@ object MessageDialog {
      * @param message 正文；为 null 时正文不显示（只有标题）
      */
     fun show(context: Context, title: String, message: String? = null) {
+        show(context, title, message, okText = null, onOk = null)
+    }
+
+    /**
+     * 显示带自定义确认按钮的弹窗（ADR-112）。
+     *
+     * ⚠️ 用户需求：「检查更新那里弹窗里面给安装包下载地址
+     *              点击确定跳转系统浏览器下载」
+     *
+     * @param okText 确认按钮文案；null 用默认「知道了」
+     * @param onOk   点击确认的回调；返回后弹窗自动关闭
+     */
+    fun show(
+        context: Context,
+        title: String,
+        message: String? = null,
+        okText: String? = null,
+        onOk: (() -> Unit)? = null,
+    ) {
         val b = DialogMessageBinding.inflate(LayoutInflater.from(context))
         b.tvTitle.text = title
         if (message.isNullOrBlank()) {
@@ -41,6 +60,7 @@ object MessageDialog {
             b.tvMessage.text = message
             b.tvMessage.visibility = android.view.View.VISIBLE
         }
+        if (!okText.isNullOrBlank()) b.btnOk.text = okText
 
         val dialog = AlertDialog.Builder(context)
             .setView(b.root)
@@ -49,7 +69,48 @@ object MessageDialog {
         // ⚠️ 必须把窗口背景设为透明，否则系统直角背景会盖住卡片的 28dp 圆角。
         //    与 CourseDetailDialog / ProfileEditDialog 的做法一致（DialogCorner）。
 
-        b.btnOk.setOnClickListener { dialog.dismiss() }
+        b.btnOk.setOnClickListener {
+            dialog.dismiss()
+            onOk?.invoke()
+        }
+        dialog.show()
+        DialogCorner.applyRounded(dialog)
+    }
+
+    /**
+     * 显示「双按钮」弹窗（ADR-112）。
+     *
+     * ⚠️ 用于「发现新版本」：确认=去下载，取消=稍后再说。
+     */
+    fun showWithSecondary(
+        context: Context,
+        title: String,
+        message: String? = null,
+        okText: String,
+        secondaryText: String,
+        onOk: () -> Unit,
+    ) {
+        val b = DialogMessageBinding.inflate(LayoutInflater.from(context))
+        b.tvTitle.text = title
+        if (message.isNullOrBlank()) {
+            b.tvMessage.visibility = android.view.View.GONE
+        } else {
+            b.tvMessage.text = message
+            b.tvMessage.visibility = android.view.View.VISIBLE
+        }
+        b.btnOk.text = okText
+        b.btnSecondary.text = secondaryText
+        b.btnSecondary.visibility = android.view.View.VISIBLE
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(b.root)
+            .create()
+
+        b.btnSecondary.setOnClickListener { dialog.dismiss() }
+        b.btnOk.setOnClickListener {
+            dialog.dismiss()
+            onOk()
+        }
         dialog.show()
         DialogCorner.applyRounded(dialog)
     }

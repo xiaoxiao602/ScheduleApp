@@ -2,7 +2,7 @@
 
 > 广州软件学院学生的课表 App —— 自动从教务系统拉取课表，本地存储，离线可看。
 
-[![Version](https://img.shields.io/badge/version-1.0.2-blue)](release/)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue)](release/)
 [![Platform](https://img.shields.io/badge/platform-Android%209%2B-green)]()
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple)]()
 
@@ -62,7 +62,7 @@
 
 ### 直接下载
 
-到 [release/](release/) 目录下载 `广软课程表-1.0.2.apk`，传到手机安装。
+到 [release/](release/) 目录下载 `广软课程表-1.0.3.apk`，传到手机安装。
 
 > ⚠️ 需要在系统设置里允许「安装未知来源应用」。
 > ⚠️ 用的是 **debug 签名**（个人自用），未上架应用商店。
@@ -161,7 +161,7 @@ app/src/main/java/com/gzuschedule/app/
 ./gradlew assembleDebug
 
 # 产物（自动命名，无 -debug 后缀）
-# app/build/outputs/apk/debug/广软课程表-1.0.2.apk
+# app/build/outputs/apk/debug/广软课程表-1.0.3.apk
 ```
 
 ### 设计文档
