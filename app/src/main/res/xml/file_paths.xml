@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FileProvider 路径配置（ADR-101）。
+
+  ⚠️ 为什么需要：
+     uCrop 裁剪后要把结果写到文件并返回 Uri。Android 7+ 起，
+     使用 `file://` URI 跨进程传递会抛 FileUriExposedException
+     （需要 FileProvider 提供 content:// URI）。
+
+  ⚠️ 只暴露 cache 目录 —— 不暴露 files/（头像文件在那里，不需要外传）。
+     最小暴露面原则。
+-->
+<paths>
+    <!-- 裁剪输出：cacheDir/avatar_crop_*.png -->
+    <cache-path
+        name="avatar_cache"
+        path="." />
+</paths>

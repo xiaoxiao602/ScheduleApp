@@ -59,6 +59,22 @@
             android:name=".ui.exam.ExamListActivity"
             android:exported="false" />
 
+        <!--
+          ⚠️ ADR-101：uCrop 裁剪结果通过内容 URI 传递。
+             Android 7+ 禁止用 file:// 跨进程传 Uri（FileUriExposedException），
+             必须由 FileProvider 提供 content:// 形式的 URI。
+             paths 配置见 res/xml/file_paths.xml（只暴露 cache 目录）。
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
     </application>
 
 </manifest>

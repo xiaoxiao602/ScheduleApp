@@ -18,7 +18,9 @@ dependencyResolutionManagement {
         // 同步不全时会解析失败。显式加上中央仓库作为兜底。
         mavenCentral()
         maven { url 'https://repo1.maven.org/maven2' }
-    }
+        // ⚠️ JitPack：uCrop 等 GitHub 项目发布在这里（ADR-101 裁剪功能）
+        maven { url 'https://jitpack.io' }
+        }
 }
 rootProject.name = "ScheduleApp"
 include ':app'

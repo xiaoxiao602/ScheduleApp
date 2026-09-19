@@ -124,5 +124,13 @@ dependencies {
     //    而 AGP 8.7.3 推荐上限就是 35 —— 引入即推高工具链，与 Haze 同因，故放弃。
     //    滚轮改用「Compose LazyColumn + 官方吸附 API」自研（见 WeekWheel.kt 说明）。
 
+    // ==================== 图片裁剪（ADR-101）====================
+    // ⚠️ 用户反馈：「没有裁切图片的功能」—— 之前是自动中心裁切，用户无法选择。
+    //    改用 uCrop（成熟的 Android 裁剪库，拖拽/缩放/旋转/正方形锁定）。
+    //    ⚠️ 它在 **JitPack** 上，需在 settings.gradle 加 jitpack.io 仓库
+    //       （已加，否则解析会 FAILED）。
+    //    ⚠️ 依赖已通过 checkDebugAarMetadata 校验：不要求更高 compileSdk。
+    implementation 'com.github.yalantis:ucrop:2.2.10'
+
     testImplementation 'junit:junit:4.13.2'
 }

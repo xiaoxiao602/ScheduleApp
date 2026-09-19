@@ -2,7 +2,6 @@ package com.gzuschedule.app.ui.widget
 
 import android.content.Context
 import android.graphics.Outline
-import android.net.Uri
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -87,22 +86,51 @@ class AvatarView @JvmOverloads constructor(
             // ---- ① 自定义头像：只显示图片 ----
             initialText.visibility = View.GONE
             image.visibility = View.VISIBLE
-            image.setImageURI(Uri.fromFile(f))
-            background = null
+
+            // ⚠️⚠️ ADR-101：必须手动解码，**不能用 setImageURI**。
+            //
+            //    用户反馈的恶性 bug：「头像换了之后再更改头像不会刷新」。
+            //
+            //    根因：头像文件路径是**固定的**（avatar/custom_avatar），
+            //    每次换头像都是覆盖写同一个文件 → `Uri.fromFile(f)` 永远相同。
+            //    `setImageURI()` 内部走 ImageDecoder，它按 **Uri + size** 缓存
+            //    已解码的 Bitmap，不感知文件内容变化 → 一直显示旧图。
+            //
+            //    ✅ 手动 decodeFile 每次都重新读文件，彻底绕开缓存。
+            //       头像只有 256x256，解码开销可忽略。
+            //
+            //    ⚠️ 解码失败（文件损坏/不是图片）时降级为姓氏头像，
+            //       不能让一个坏文件把界面卡成空白。
+            val bmp = runCatching {
+                android.graphics.BitmapFactory.decodeFile(f.absolutePath)
+            }.getOrNull()
+
+            if (bmp != null) {
+                image.setImageBitmap(bmp)
+                background = null
+            } else {
+                // 文件损坏 → 走姓氏头像分支
+                showInitialAvatar()
+            }
         } else {
             // ---- ② 姓氏头像：圆形色块 + 首字 ----
-            image.visibility = View.GONE
-            image.setImageDrawable(null)
+            showInitialAvatar()
+        }
+    }
 
-            initialText.text = UserProfileStore.initial(pendingName)
-            initialText.visibility = View.VISIBLE
-            initialText.textSize = computeTextSizeSp()
+    /** 显示「姓氏首字 + 圆形底色」的默认头像。 */
+    private fun showInitialAvatar() {
+        image.visibility = View.GONE
+        image.setImageDrawable(null)
 
-            // 底色用自绘 drawable，避免依赖 Material 组件的形状计算
-            background = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.OVAL
-                setColor(fallbackColor)
-            }
+        initialText.text = UserProfileStore.initial(pendingName)
+        initialText.visibility = View.VISIBLE
+        initialText.textSize = computeTextSizeSp()
+
+        // 底色用自绘 drawable，避免依赖 Material 组件的形状计算
+        background = android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.OVAL
+            setColor(fallbackColor)
         }
     }
 

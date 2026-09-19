@@ -38,6 +38,7 @@ import com.gzuschedule.app.ui.widget.SettingsRow
 import com.gzuschedule.app.data.local.entity.MetaEntity
 import com.gzuschedule.app.domain.TimeFormats
 import com.gzuschedule.app.domain.WeekCalculator
+import com.yalantis.ucrop.UCrop
 import java.time.LocalDate
 import com.google.android.material.snackbar.Snackbar
 import com.gzuschedule.app.databinding.FragmentSettingsBinding
@@ -164,12 +165,35 @@ class SettingsFragment : Fragment() {
      * ⚠️ 用 PickVisualMedia 而非旧的权限方案：
      * 系统进程展示图片并只授予选中那张的临时读取权，
      * **App 无需 READ_MEDIA_IMAGES 等任何存储权限**。
+     *
+     * ⚠️ ADR-101：选图后**先进裁剪页**（uCrop），用户可拖拽/缩放决定裁哪部分。
+     *     之前是自动中心裁切，用户无法选择 —— 用户反馈「没有裁切图片的功能」。
      */
     private val pickAvatar = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
         if (uri == null) return@registerForActivityResult
-        val ok = UserProfileStore.saveAvatar(requireContext(), uri.toString())
+        // → 进入裁剪页（不再直接保存）
+        launchCropper(uri)
+    }
+
+    /**
+     * 裁剪结果回调（uCrop）。
+     *
+     * ⚠️ uCrop 把裁剪结果写到一个**临时输出文件**，这里再读它存为头像。
+     */
+    private val cropAvatar = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        val data = result.data
+        val outUri = UCrop.getOutput(data ?: return@registerForActivityResult)
+
+        // 用户取消裁剪 → 什么都不做（保留原头像）
+        if (result.resultCode != android.app.Activity.RESULT_OK || outUri == null) {
+            return@registerForActivityResult
+        }
+
+        val ok = UserProfileStore.saveAvatar(requireContext(), outUri.toString())
         if (ok) {
             renderProfile()
             MessageDialog.toast(requireContext(), "头像已更新")
@@ -177,6 +201,58 @@ class SettingsFragment : Fragment() {
             MessageDialog.show(requireContext(), "保存失败", "头像没能保存成功，请换一张图片再试。")
         }
     }
+
+    /** 打开 uCrop 裁剪页（正方形，可拖拽/缩放/旋转）。 */
+    private fun launchCropper(source: android.net.Uri) {
+        val ctx = requireContext()
+
+        // uCrop 需要一个「结果输出」的 Uri（写到 App 私有缓存，无需权限）
+        val outFile = java.io.File(ctx.cacheDir, "avatar_crop_${System.currentTimeMillis()}.png")
+        val outUri = androidx.core.content.FileProvider.getUriForFile(
+            ctx, "${ctx.packageName}.fileprovider", outFile,
+        )
+
+        val options = UCrop.Options().apply {
+            // 正方形头像（与 AvatarView 的圆形裁切一致）
+            withAspectRatio(1f, 1f)
+            // 锁定正方形比例，避免用户拖成非正方形
+            setFreeStyleCropEnabled(false)
+
+            // ⚠️ 配色用项目自己的品牌色（R.color.brand_primary）。
+            //    不能用 com.google.android.material.R.attr.colorPrimary ——
+            //    Material 3 已移除该 attr（编译报 Unresolved reference）。
+            val primary = androidx.core.content.ContextCompat.getColor(
+                ctx, com.gzuschedule.app.R.color.brand_primary,
+            )
+
+            setToolbarColor(primary)
+            setToolbarWidgetColor(android.graphics.Color.WHITE)
+            setStatusBarColor(darken(primary, 0.85f))
+            setActiveControlsWidgetColor(primary)
+            setRootViewBackgroundColor(
+                androidx.core.content.ContextCompat.getColor(ctx, android.R.color.white),
+            )
+
+            // 输出质量
+            setCompressionFormat(android.graphics.Bitmap.CompressFormat.PNG)
+            setCompressionQuality(100)
+
+            // 圆形裁剪网格（提示这是头像）
+            setCircleDimmedLayer(true)
+            setShowCropFrame(false)
+
+            setHideBottomControls(false)
+        }
+
+        val intent = UCrop.of(source, outUri)
+            .withOptions(options)
+            .getIntent(ctx)
+        cropAvatar.launch(intent)
+    }
+
+    /** 把颜色按比例调暗（用于状态栏，避免与工具栏同色分不清）。 */
+    private fun darken(color: Int, factor: Float): Int =
+        androidx.core.graphics.ColorUtils.blendARGB(color, android.graphics.Color.BLACK, 1f - factor)
 
     private fun launchAvatarPicker() {
         pickAvatar.launch(
