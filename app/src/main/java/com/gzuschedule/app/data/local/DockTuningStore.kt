@@ -167,7 +167,13 @@ class DockTuningStore(context: Context) {
         const val DEF_SLIDER_CORNER = 30   // 滑块圆角（用户实测指定）
         const val DEF_SLIDER_W = 0         // 滑块宽度增量（贴文字）
         const val DEF_TEXT = 160           // 16.0sp
-        const val DEF_BOTTOM_OFFSET = 35   // 距屏幕底部
+        /**
+         * 距屏幕底部的默认值（dp）。
+         *
+         * ⚠️ ADR-093：用户反馈「你怎么改动了 dock 的默认距离屏幕底部高度 改回去默认 30」。
+         *    —— 这个值曾被设成 35，用户要的是 **30**。以用户实测为准。
+         */
+        const val DEF_BOTTOM_OFFSET = 30
         const val DEF_DOCK_WIDTH = 45      // 左右各留 45dp
         const val DEF_ANIM_MS = 480        // 滑动时长
         const val DEF_DAMPING = 130        // 阻尼回弹 ×100 = 1.30

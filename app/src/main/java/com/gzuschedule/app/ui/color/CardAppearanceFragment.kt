@@ -25,6 +25,7 @@ import com.gzuschedule.app.domain.CoursePalette
 import com.gzuschedule.app.domain.model.Course
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.gzuschedule.app.ui.widget.DialogCorner
 
 /**
  * 课程外观二级页（ADR-069）。
@@ -229,6 +230,8 @@ class CardAppearanceFragment : Fragment() {
         }
         pendingDialog = dialog
         dialog.show()
+        // ⚠️ ADR-098：必须在 show() 之后 —— window 才存在，否则圆角静默失效
+        DialogCorner.applyRounded(dialog)
     }
 
     /** HSV 取色（三个滑块，无第三方依赖）。 */
@@ -277,7 +280,12 @@ class CardAppearanceFragment : Fragment() {
                 renderCourses()
             }
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+            .create()
+            .also { d ->
+                d.show()
+                // ⚠️ ADR-098：show() 之后才能设 Window 背景
+                DialogCorner.applyRounded(d)
+            }
     }
 
     private fun resetAllColors() {
@@ -289,7 +297,11 @@ class CardAppearanceFragment : Fragment() {
                 renderCourses()
             }
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+            .create()
+            .also { d ->
+                d.show()
+                DialogCorner.applyRounded(d)
+            }
     }
 
 

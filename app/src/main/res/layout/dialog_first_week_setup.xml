@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  首次同步后的「设置第一周星期一」引导弹窗（ADR-096）。
+
+  ⚠️ 用户反馈：「新增一个用户首次同步课表的时候弹窗提示他选择本学期第一周周一的时间
+                 我给别人用的时候有人不会用」
+
+  ⚠️ 为什么必须引导：
+     教务接口只返回**相对周次**（如 "1-9周"），**不返回学期起始日**。
+     不设置「第一周星期一」的话，App 无法算出"今天第几周"，
+     课表页的周次切换和日期都会错 —— 新用户会以为 App 坏了。
+
+  ⚠️ 圆角要求（用户强调「你加弹窗一定要注意这点」）：
+     布局自带 bg_dialog_card（28dp 圆角），
+     且 dialog.show() 之后必须调 DialogCorner.applyRounded(dialog)。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="设置学期的第一周"
+        android:textSize="19sp"
+        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textSize="14sp"
+        android:lineSpacingExtra="4dp"
+        android:alpha="0.75"
+        android:textColor="?attr/colorOnSurface"
+        android:text="课表数据只记录了「第几周」，需要你告诉 App 这一学期的第一周从哪天开始，才能正确显示当前第几周和每天的日期。" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:alpha="0.6"
+        android:textColor="?attr/colorOnSurface"
+        android:text="第一周星期一" />
+
+    <!-- 当前选择（点击弹日期选择器） -->
+    <LinearLayout
+        android:id="@+id/rowPickMonday"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:minHeight="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:background="@drawable/bg_setting_card"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:id="@+id/tvMondayValue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="16sp"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="2026-08-31（星期一）" />
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_calendar"
+            android:importantForAccessibility="no"
+            android:alpha="0.6" />
+
+    </LinearLayout>
+
+    <!-- 提示：必须选星期一 -->
+    <TextView
+        android:id="@+id/tvMondayHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="11sp"
+        android:alpha="0.6"
+        android:textColor="?attr/colorOnSurface"
+        android:text="💡 请选择**星期一**（学期第一天所在周的周一）。不确定的话，一般就是开学那天所在周的周一。" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnConfirmMonday"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="设置好了" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSkipMonday"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="以后再说" />
+
+</LinearLayout>

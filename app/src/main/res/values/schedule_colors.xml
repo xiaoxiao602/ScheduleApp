@@ -8,7 +8,7 @@
 -->
 <resources>
     <!-- 课表区域底色：与主题 surface 一致（浅色=近白） -->
-    <color name="schedule_surface">#F0F2F7</color>
+    <color name="schedule_surface">#E8EBF2</color>
 
     <!-- 网格线：浅灰描边（只画线，不填格） -->
     <color name="schedule_grid_line">#E0E3E8</color>

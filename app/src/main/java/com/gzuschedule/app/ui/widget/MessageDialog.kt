@@ -48,10 +48,10 @@ object MessageDialog {
 
         // ⚠️ 必须把窗口背景设为透明，否则系统直角背景会盖住卡片的 28dp 圆角。
         //    与 CourseDetailDialog / ProfileEditDialog 的做法一致（DialogCorner）。
-        DialogCorner.applyRounded(dialog)
 
         b.btnOk.setOnClickListener { dialog.dismiss() }
         dialog.show()
+        DialogCorner.applyRounded(dialog)
     }
 
     /** 简版：只有一行标题（用于"头像已更新"这类无需解释的提示）。 */

@@ -527,7 +527,7 @@ class DockBarView @JvmOverloads constructor(
                 if (!dragging && abs(dx) > dp(6).toFloat()) {
                     dragging = true
                     sliderAnimator?.cancel()
-                    performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    Haptics.dragTick(this)
                 }
                 if (dragging) {
                     // ⚠️ ADR-040：maxSliderX() 与首格公式对称，故左右可动距离相等。
@@ -548,6 +548,18 @@ class DockBarView @JvmOverloads constructor(
                 val wasDragging = dragging
                 dragging = false
 
+                // ⚠️ ADR-093：震动**不能在这里发**。
+                //    用户反馈「切换页面会有多余震动，像震动了好几次」。
+                //    根因：点 Dock 时有两个地方都在震 ——
+                //      ① 这里（Dock 点击）
+                //      ② MainActivity.showFragment()（切页统一入口）
+                //    一次点击 → 两次震动。
+                //
+                //    ✅ 现在的职责划分：
+                //      · **切到不同页面** → 由 showFragment() 统一发（见 MainActivity）
+                //      · **原地点击当前格**（页面没变）→ showFragment 会提前 return，
+                //        所以只有这种情况才在 Dock 侧补一次震动
+                //      · **拖动** → 拖动开始的 tick 在 ACTION_MOVE 里发（保留）
                 if (wasDragging) {
                     val nearest = nearestIndex(sliderX)
                     // 松手后一定吸附到最近的格；只有目标与起点不同才回调
@@ -556,7 +568,8 @@ class DockBarView @JvmOverloads constructor(
                 } else {
                     val idx = indexAt(event.x)
                     if (idx >= 0) {
-                        performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        // 只在「页面不会切换」时补震动（否则 showFragment 会发，重复）
+                        if (idx == selectedIndex) Haptics.dockSelect(this)
                         select(idx, animate = true)
                         onSelect?.invoke(idx)
                     }

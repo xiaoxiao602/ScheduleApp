@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  通用「单选列表」弹窗内容（ADR-095）。
+
+  ⚠️ 用户要求：「触感选择菜单也改成圆角矩形和我们的 app 风格统一」
+     + 「你加弹窗一定要注意这点」
+
+  ⚠️ 为什么不用 Spinner / setSingleChoiceItems：
+     · Spinner 的**下拉列表**由系统绘制，圆角改不了（是系统 Window）
+     · AlertDialog.setSingleChoiceItems 的列表项也没有圆角容器
+
+  ⚠️ 圆角生效的前提：
+     布局自带圆角背景（bg_dialog_card 28dp），
+     并且 **dialog.show() 之后必须调 DialogCorner.applyRounded(dialog)**
+     —— 否则系统的 Window 背景会把四个角盖成直角。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <!-- 标题（可选） -->
+    <TextView
+        android:id="@+id/optionTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
+        tools:text="震动风格" />
+
+    <!-- 选项列表（选项多时可滚动） -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="400dp">
+
+        <LinearLayout
+            android:id="@+id/optionList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
+
+</LinearLayout>

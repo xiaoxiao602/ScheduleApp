@@ -47,9 +47,9 @@
       ⚠️ 这是 Material 3 的标准层次做法（surface 比 surfaceContainer 略深），
          不是随便调一个灰。勿再调回接近纯白。
     -->
-    <color name="brand_surface">#F0F2F7</color>
-    <color name="brand_surface_container">#EEF0F7</color>
-    <color name="brand_surface_container_high">#E3E6EE</color>
+    <color name="brand_surface">#E8EBF2</color>
+    <color name="brand_surface_container">#E4E8F0</color>
+    <color name="brand_surface_container_high">#DCE0EA</color>
 
     <!--
       surface 上的前景色（ADR-029）。

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  切页过渡：旧页退出（ADR-099）。
+
+  ⚠️ 与 fragment_enter 对称但**更含蓄**：
+     · scale 1.0 → 0.97（只缩一点点 —— 退场不该抢戏）
+     · alpha 1 → 0（淡出）
+     · 同样 150ms
+
+  ⚠️ 为什么退场缩放幅度（0.97）比进场（0.94）小：
+     进场是「主角登场」，可以明显一点；
+     退场是「配角下场」，太明显会让人注意到"两层页面在打架"。
+
+  ⚠️ interpolator 用 accelerate（先慢后快）——
+     退场应该"加速离开"，让注意力留给进场的新页。
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/accelerate_interpolator">
+
+    <alpha
+        android:duration="150"
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0" />
+
+    <scale
+        android:duration="150"
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:toXScale="0.97"
+        android:toYScale="0.97"
+        android:pivotX="50%"
+        android:pivotY="50%" />
+
+</set>

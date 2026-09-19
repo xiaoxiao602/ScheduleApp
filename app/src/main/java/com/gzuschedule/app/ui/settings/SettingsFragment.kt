@@ -6,7 +6,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.ImageView
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,14 +18,21 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.slider.Slider
 import com.gzuschedule.app.data.auth.LoginDiagnostics
 import com.gzuschedule.app.R
 import com.gzuschedule.app.data.local.AppDatabase
 import com.gzuschedule.app.data.local.DockTuningStore
+import com.gzuschedule.app.data.local.HapticStore
+import com.gzuschedule.app.data.local.Style
+import com.gzuschedule.app.ui.widget.Haptics
 import com.gzuschedule.app.data.local.UserProfileStore
 import com.gzuschedule.app.ui.widget.ProfileEditDialog
 import com.gzuschedule.app.data.local.CardStyleStore
 import com.gzuschedule.app.ui.color.CourseColorActivity
+import com.gzuschedule.app.ui.haptic.HapticActivity
+import com.gzuschedule.app.ui.dock.DockTuningActivity
 import com.gzuschedule.app.ui.widget.MessageDialog
 import com.gzuschedule.app.ui.widget.SettingsRow
 import com.gzuschedule.app.data.local.entity.MetaEntity
@@ -113,8 +123,25 @@ class SettingsFragment : Fragment() {
             startActivity(Intent(requireContext(), CourseColorActivity::class.java))
         }
 
-        // ---- Dock 外观调节（ADR-033）----
-        setupDockTuning()
+        // ---- Dock 外观调节（ADR-094：改为二级页）----
+        SettingsRow.bind(
+            binding.btnDockTuning.root,
+            R.drawable.ic_palette,
+            "Dock 外观调节",
+        )
+        binding.btnDockTuning.root.setOnClickListener {
+            startActivity(Intent(requireContext(), DockTuningActivity::class.java))
+        }
+
+        // ---- 触感反馈（ADR-094：改为二级页）----
+        SettingsRow.bind(
+            binding.btnHapticTuning.root,
+            R.drawable.ic_diagnostics,
+            "触感反馈",
+        )
+        binding.btnHapticTuning.root.setOnClickListener {
+            startActivity(Intent(requireContext(), HapticActivity::class.java))
+        }
 
         // ---- 我的：点头像卡 → 个人资料编辑弹窗（ADR-046）----
         // ⚠️ 原先此处竖排三个按钮（修改显示名/更换头像/恢复默认头像）占掉约 150dp，
@@ -452,131 +479,6 @@ class SettingsFragment : Fragment() {
      *   ✅ 现在：先绑定监听（带 isBinding 保护），再统一 renderFromStore()，
      *      保证「滑块位置 = store 值 = 标签文字」三者永远一致。
      */
-    private fun setupDockTuning() {
-        val store = DockTuningStore(requireContext())
-        val b = binding
-
-        // 展开/收起面板
-        b.btnDockTuning.setOnClickListener {
-            b.dockTuningPanel.visibility =
-                if (b.dockTuningPanel.visibility == View.VISIBLE) View.GONE else View.VISIBLE
-        }
-
-        /** 参数表：滑块 ↔ 读写 store 的方式。集中管理避免遗漏。 */
-        data class Row(
-            val slider: com.google.android.material.slider.Slider,
-            val label: TextView,
-            val read: () -> Int,
-            val write: (Int) -> Unit,
-            val format: (Int) -> String,
-            val min: () -> Int,
-            val max: () -> Int,
-        )
-
-        val rows = listOf(
-            Row(b.sliderDockHeight, b.tvDockHeightLabel,
-                { store.dockBottomOffset }, { store.dockBottomOffset = it },
-                { "距屏幕底部 · ${it}dp（位置）" },
-                { DockTuningStore.MIN_BOTTOM_OFFSET }, { DockTuningStore.MAX_BOTTOM_OFFSET }),
-            Row(b.sliderDockWidth, b.tvDockWidthLabel,
-                { store.dockWidth }, { store.dockWidth = it },
-                { if (it == 0) "Dock 宽度 · 自适应（左右各 16dp）" else "Dock 宽度 · 左右各留 ${it}dp" },
-                { DockTuningStore.MIN_DOCK_WIDTH }, { DockTuningStore.MAX_DOCK_WIDTH }),
-            Row(b.sliderDockCorner, b.tvDockCornerLabel,
-                { store.dockCorner }, { store.dockCorner = it },
-                { "Dock 圆角 · ${it}dp" },
-                { DockTuningStore.MIN_CORNER }, { DockTuningStore.MAX_CORNER }),
-            Row(b.sliderDockThickness, b.tvDockThicknessLabel,
-                { store.dockHeight }, { store.dockHeight = it },
-                { "Dock 厚度 · ${it}dp" },
-                { DockTuningStore.MIN_HEIGHT }, { DockTuningStore.MAX_HEIGHT }),
-            Row(b.sliderSliderHeight, b.tvSliderHeightLabel,
-                { store.sliderHeight }, { store.sliderHeight = it },
-                { "滑块高度 · ${it}dp" },
-                { DockTuningStore.MIN_SLIDER_H }, { DockTuningStore.MAX_SLIDER_H }),
-            Row(b.sliderSliderCorner, b.tvSliderCornerLabel,
-                { store.sliderCorner }, { store.sliderCorner = it },
-                { "滑块圆角 · ${it}dp" },
-                { DockTuningStore.MIN_SLIDER_CORNER }, { DockTuningStore.MAX_SLIDER_CORNER }),
-            Row(b.sliderSliderWidth, b.tvSliderWidthLabel,
-                { store.sliderExtraWidth }, { store.sliderExtraWidth = it },
-                { "滑块宽度增量 · ${it}dp（左右各 ${it / 2}）" },
-                { DockTuningStore.MIN_SLIDER_W }, { DockTuningStore.MAX_SLIDER_W }),
-            Row(b.sliderDockTextSize, b.tvDockTextSizeLabel,
-                { store.textSizeTenths }, { store.textSizeTenths = it },
-                { "文字大小 · ${it / 10f}sp" },
-                { DockTuningStore.MIN_TEXT }, { DockTuningStore.MAX_TEXT }),
-            Row(b.sliderAnimDuration, b.tvAnimDurationLabel,
-                { store.animDuration }, { store.animDuration = it },
-                { "滑动时长 · ${it}ms" },
-                { DockTuningStore.MIN_ANIM_MS }, { DockTuningStore.MAX_ANIM_MS }),
-            Row(b.sliderDamping, b.tvDampingLabel,
-                { store.dampingOvershoot }, { store.dampingOvershoot = it },
-                { "阻尼回弹 · ${"%.2f".format(it / 100f)}" },
-                { DockTuningStore.MIN_DAMPING }, { DockTuningStore.MAX_DAMPING }),
-        )
-
-        /**
-         * 重新挂监听（每次渲染后都要重挂，因为 renderFromStore 会 clear）。
-         *
-         * ⚠️ 用 lateinit 局部函数引用，避免「先调用后定义」的编译问题：
-         *    Kotlin 的局部函数必须在使用前声明，而 renderFromStore 需要调用它。
-         */
-        lateinit var attachListeners: () -> Unit
-
-        /** 由 store 渲染到 UI（滑块位置 + 标签）。设置值期间抑制回调。 */
-        fun renderFromStore() {
-            rows.forEach { r ->
-                val v = r.read()
-                r.slider.clearOnChangeListeners()
-                // ⚠️ ADR-038：把滑块范围**强制对齐** Store 上下限。
-                //    之前 XML 里写的范围与 Store 不一致（圆角 48 vs 32、
-                //    滑块高度 64 vs 60），拖到超限位置会被 coerceIn 夹回，
-                //    表现为「滑块自己弹回去」——用户报告的「很多 bug」主因。
-                r.slider.valueFrom = r.min().toFloat()
-                r.slider.valueTo = r.max().toFloat()
-                r.slider.value = v.toFloat()
-                r.label.text = r.format(v)
-            }
-            attachListeners()
-        }
-
-        attachListeners = {
-            rows.forEach { r ->
-                r.slider.clearOnSliderTouchListeners()
-                r.slider.addOnChangeListener { _, value, fromUser ->
-                    // ⚠️ 只响应**用户拖动**，程序设置值不写回 store（防回环）
-                    if (!fromUser) return@addOnChangeListener
-                    r.write(value.toInt())
-                    r.label.text = r.format(value.toInt())
-                }
-                r.slider.addOnSliderTouchListener(
-                    object : com.google.android.material.slider.Slider.OnSliderTouchListener {
-                        override fun onStartTrackingTouch(s: com.google.android.material.slider.Slider) = Unit
-                        override fun onStopTrackingTouch(s: com.google.android.material.slider.Slider) {
-                            // 松手才刷新 Dock（避免拖动中频繁重排）
-                            applyToDock(store)
-                        }
-                    },
-                )
-            }
-        }
-
-        renderFromStore()
-
-        // 恢复默认
-        b.btnDockReset.setOnClickListener {
-            store.resetAll()
-            renderFromStore()
-            applyToDock(store)
-            MessageDialog.toast(requireContext(), "已恢复默认外观")
-        }
-    }
-
-    /** 把当前 store 值应用到 Dock（即时生效，不重建界面）。 */
-    private fun applyToDock(store: DockTuningStore) {
-        (activity as? com.gzuschedule.app.ui.main.MainActivity)?.refreshDockAppearance()
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

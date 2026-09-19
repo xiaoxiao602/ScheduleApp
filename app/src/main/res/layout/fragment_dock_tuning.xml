@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dock 外观调节二级页（ADR-094）。
+
+  ⚠️ 用户反馈：「给 dock 外观调节和震动调节 也做其他设置界面一样的二级页面」
+     —— 原来是内嵌在设置页里展开/收起的面板，现独立成二级页，
+     与「课程外观」形态一致。
+
+  结构照 fragment_card_appearance.xml：ScrollView + 分区标题 + 内容。
+
+  ⚠️ 所有 slider 的 valueFrom/valueTo 必须与 DockTuningStore 的 MIN_*/MAX_* 一致，
+     否则会出现「滑块能拖到无效值」或「保存的值显示不出来」。
+     本文件的值与 DockTuningStore 常量一一对应。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="40dp">
+
+        <!-- ============ 一、Dock 本体 ============ -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="14dp"
+            android:paddingBottom="6dp"
+            android:text="Dock 本体"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <!-- 距屏幕底部 -->
+        <TextView
+            android:id="@+id/tvDockHeightLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12sp"
+            tools:text="距屏幕底部 · 30dp（位置）" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderDockHeight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="0"
+            android:valueTo="120" />
+
+        <!-- Dock 左右宽度 -->
+        <TextView
+            android:id="@+id/tvDockWidthLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            tools:text="Dock 宽度 · 自适应（左右各 16dp）" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderDockWidth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="0"
+            android:valueTo="120" />
+
+        <!-- Dock 圆角 -->
+        <TextView
+            android:id="@+id/tvDockCornerLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            tools:text="Dock 圆角 · 28dp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderDockCorner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="0"
+            android:valueTo="32" />
+
+        <!-- Dock 厚度 -->
+        <TextView
+            android:id="@+id/tvDockThicknessLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            tools:text="Dock 厚度 · 58dp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderDockThickness"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="40"
+            android:valueTo="96" />
+
+        <!-- ============ 二、滑块 ============ -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="6dp"
+            android:text="滑块"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <TextView
+            android:id="@+id/tvSliderHeightLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            tools:text="滑块高度 · 48dp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderSliderHeight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="24"
+            android:valueTo="60" />
+
+        <TextView
+            android:id="@+id/tvSliderCornerLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            tools:text="滑块圆角 · 30dp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderSliderCorner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="0"
+            android:valueTo="40" />
+
+        <TextView
+            android:id="@+id/tvSliderWidthLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            tools:text="滑块宽度增量 · 0dp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderSliderWidth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="0"
+            android:valueTo="40" />
+
+        <!-- ============ 三、文字与动画 ============ -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="6dp"
+            android:text="文字与动画"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <TextView
+            android:id="@+id/tvDockTextSizeLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            tools:text="文字大小 · 16sp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderDockTextSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="90"
+            android:valueTo="200" />
+
+        <TextView
+            android:id="@+id/tvAnimDurationLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            tools:text="滑动时长 · 480ms" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderAnimDuration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="10"
+            android:valueFrom="200"
+            android:valueTo="800" />
+
+        <TextView
+            android:id="@+id/tvDampingLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="12sp"
+            tools:text="阻尼回弹 · 1.30" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderDamping"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="1"
+            android:valueFrom="100"
+            android:valueTo="250" />
+
+        <!-- ============ 恢复默认 ============ -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDockReset"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:text="恢复默认" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textSize="11sp"
+            android:alpha="0.55"
+            android:lineSpacingExtra="2dp"
+            android:text="💡 拖动滑块即时生效，切回课表页就能看到效果。" />
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  弹窗内的单选项行（ADR-095）。
+
+  结构：[标题 + 副标题（weight=1）]  [选中对勾]
+
+  ⚠️ 选中态靠代码切换 optCheck 的可见性（不依赖 selector）——
+     因为「对勾 vs 空白」比「背景变色」更符合 iOS/Material 的选择弹窗惯例。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="52dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingVertical="10dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/optLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="滴答" />
+
+        <TextView
+            android:id="@+id/optDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="12sp"
+            android:alpha="0.6"
+            android:textColor="?attr/colorOnSurface"
+            android:visibility="gone"
+            tools:text="短促清脆，像秒针走动"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/optCheck"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="12dp"
+        android:src="@drawable/ic_check"
+        android:importantForAccessibility="no"
+        android:visibility="invisible"
+        tools:visibility="visible" />
+
+</LinearLayout>

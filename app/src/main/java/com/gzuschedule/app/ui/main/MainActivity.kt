@@ -17,6 +17,8 @@ import com.gzuschedule.app.ui.schedule.ScheduleFragment
 import com.gzuschedule.app.ui.settings.SettingsFragment
 import com.gzuschedule.app.ui.today.TodayFragment
 import com.gzuschedule.app.ui.widget.DockBarView
+import com.gzuschedule.app.ui.widget.FirstWeekSetupDialog
+import com.gzuschedule.app.ui.widget.Haptics
 
 /**
  * 主界面 —— 启动入口（ADR-005/006/019）。
@@ -62,6 +64,41 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             showFragment(0)
         }
+
+        // ⚠️ ADR-096：首次同步后的「设置第一周星期一」引导。
+        //    用户反馈：「我给别人用的时候有人不会用」——
+        //    教务接口不返回学期起始日，不设这个就算不出"今天第几周"。
+        //    放在 savedInstanceState == null 之外，保证旋转屏幕后不重复弹。
+        if (savedInstanceState == null) {
+            binding.root.post {
+                FirstWeekSetupDialog.showIfNeeded(this) {
+                    // 设置完/跳过后，让课表页重算周次
+                    notifyFirstMondayChanged()
+                }
+            }
+        }
+    }
+
+    /**
+     * 通知课表页 / 今天页重读 FIRST_MONDAY 并重算周次（ADR-096）。
+     *
+     * ⚠️⚠️ 血泪教训（用户实测崩溃：「点『设置好了』然后就崩了」）：
+     *     最初这里写的是 `f.onResume()` —— **绝不能手动调用 Fragment 的生命周期方法**！
+     *     Fragment 的内部状态机（mState / mCalled 标志）由 FragmentManager 维护，
+     *     外部直接调 onResume() 会让状态错乱，触发
+     *     `SuperNotCalledException` / `IllegalStateException` 直接崩。
+     *
+     *     ✅ 正确做法：让 Fragment **自己**提供刷新入口，
+     *        这里只负责「通知」。刷新逻辑归 Fragment，生命周期归系统。
+     *
+     *     ✅ 更稳的做法：切换到该页时 onHiddenChanged 本来就会被调用
+     *        （ScheduleFragment / TodayFragment 都实现了），
+     *        所以这里其实**只需把用户切到课表页**，让系统自然触发刷新。
+     */
+    private fun notifyFirstMondayChanged() {
+        // 切回课表页 —— 系统的 show/hide 会触发 onHiddenChanged → 自动重读 FIRST_MONDAY
+        showFragment(1)
+        binding.dockBar.select(index = 1, animate = true)
     }
 
     private fun setupDock() {
@@ -83,8 +120,9 @@ class MainActivity : AppCompatActivity() {
      * 新实现：**实例缓存 + show/hide**：
      *   * Fragment 只创建一次，之后仅切换可见性（View 树保留）
      *   * 首次进入才走完整生命周期，之后切回是"秒开"
-     *   * 不加自定义淡入淡出动画 —— 系统默认过渡已足够，
-     *     且省掉一层 View 动画开销（Dock 自身有滑块动画，视觉已够）
+     *   * ⚠️ ADR-099 修正：`show/hide` **默认无过渡动画**（之前此处注释
+     *     「系统默认过渡已足够」是错的）。现在显式加 150ms 缩放+淡入，
+     *     观感柔和但开销可控（用户实测接受）。
      *
      * ⚠️ 用 `commit()` 而非 `commitAllowingStateLoss()`：
      *    切换是用户主动操作，丢状态会造成"点了没反应"，不值得省。
@@ -98,8 +136,20 @@ class MainActivity : AppCompatActivity() {
         }
         if (tag == currentTag) return
 
+        // ⚠️ ADR-092：切 tab 的震动反馈。
+        //    放这里而不是 Dock 的 onSelect 回调里 —— 因为切 tab 还有别的入口
+        //    （如「设置」页的 navigateToSettings()），统一在这里触发最稳。
+        Haptics.tab(binding.dockBar)
+
         val fm = supportFragmentManager
         val tx = fm.beginTransaction()
+
+        // ⚠️ ADR-099：切页过渡动画（用户要求：缩放 + 淡入，150ms）。
+        //    ⚠️ `show/hide` **默认没有过渡动画** —— 必须显式 setCustomAnimations。
+        //       （之前注释里写的「系统默认过渡已足够」是错的，实际是硬切。）
+        //    ⚠️ 订单：enter / exit。第一个参数作用于**将显示的** Fragment，
+        //       第二个作用于**将隐藏的**。
+        tx.setCustomAnimations(R.anim.fragment_enter, R.anim.fragment_exit)
 
         // 先隐藏当前
         currentTag?.let { fm.findFragmentByTag(it)?.let { tx.hide(it) } }

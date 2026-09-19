@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  触感反馈二级页（ADR-094）。
+
+  ⚠️ 用户反馈：「给 dock 外观调节和震动调节 也做其他设置界面一样的二级页面」
+
+  ⚠️ 为什么这些设置存在（用户反馈）：
+     「小米13 是清脆的反馈，小米15 是咚咚」「按钮没有震动反馈」
+     · 震动波形由厂商决定 —— Android 把「常量 → 马达波形」的映射交给 OEM，
+       同一份代码在不同手机上必然不同，这不是 bug。
+     · 所以让用户在自己设备上对比着选风格 + 调强度。
+
+  ⚠️ sliderHapticStrength 的 valueFrom/To 必须与 HapticStore 的
+     MIN_STRENGTH / MAX_STRENGTH 一致。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="40dp">
+
+        <!-- ============ 一、总开关 ============ -->
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swHapticEnabled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:minHeight="48dp"
+            android:text="启用震动反馈"
+            android:textSize="15sp" />
+
+        <!-- ============ 二、风格 ============ -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="6dp"
+            android:text="震动风格"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <TextView
+            android:id="@+id/tvHapticStyleLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            tools:text="当前：滴答" />
+
+        <TextView
+            android:id="@+id/tvHapticStyleDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="11sp"
+            android:alpha="0.6"
+            tools:text="短促清脆，像秒针走动（Dock 原本的效果）" />
+
+        <!--
+          ⚠️ ADR-095：不用 Spinner。
+             Spinner 的**下拉列表**由系统绘制，圆角改不了，
+             与 App 的 28dp 圆角风格不统一。
+             改成可点击的行 → 点击弹出自定义圆角单选弹窗（RoundOptionDialog）。
+        -->
+        <LinearLayout
+            android:id="@+id/rowHapticStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="52dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/bg_setting_card"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/tvHapticStyleValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="15sp"
+                tools:text="滴答" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_chevron_down"
+                android:importantForAccessibility="no"
+                android:alpha="0.45" />
+
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnHapticPreview"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="试一下" />
+
+        <!-- ============ 三、强度 ============ -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="6dp"
+            android:text="强度"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <TextView
+            android:id="@+id/tvHapticStrengthLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            tools:text="强度 · 100%" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderHapticStrength"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stepSize="5"
+            android:valueFrom="30"
+            android:valueTo="100" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:alpha="0.55"
+            android:text="100% = 系统默认强度。低于 100% 需要 Android 12 及以上才生效。" />
+
+        <!-- ============ 四、生效范围 ============ -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="6dp"
+            android:text="在哪些地方震动"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:alpha="0.6" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swHapticDock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Dock 拖动 / 点击"
+            android:textSize="14sp" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swHapticTab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="底部导航切换"
+            android:textSize="14sp" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swHapticButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="按钮点击"
+            android:textSize="14sp" />
+
+        <!-- ============ 设备差异说明 ============ -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:textSize="11sp"
+            android:alpha="0.55"
+            android:lineSpacingExtra="2dp"
+            android:text="💡 不同手机的震动马达和系统调校不同，同一设置在两台设备上手感可能不一样 —— 这是系统决定的，按自己在意的设备调即可。" />
+
+    </LinearLayout>
+</ScrollView>

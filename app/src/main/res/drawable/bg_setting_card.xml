@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  页面内的「设置行」卡片背景（ADR-095）。
+
+  ⚠️ 为什么单独一个（不复用 bg_dialog_card）：
+     · 弹窗是**独立浮层**，圆角用 28dp（card_corner_large）最协调；
+     · 页面内的行紧贴其他元素，28dp 会显得过于圆润，
+       用 16dp 更贴合列表行的视觉重量。
+
+  ⚠️ 颜色用 colorSurfaceContainerHigh，与主页卡片同源。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorSurfaceContainerHigh" />
+    <corners android:radius="16dp" />
+</shape>

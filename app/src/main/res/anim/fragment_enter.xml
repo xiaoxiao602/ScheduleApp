@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  切页过渡：新页进入（ADR-099）。
+
+  ⚠️ 用户要求：「缩放 + 淡入」效果，150ms。
+
+  参数说明：
+    · alpha 0 → 1（淡入）
+    · scale 0.94 → 1.0（轻微放大 —— 0.94 是"刚从卡片里浮出来"的幅度，
+      再小会显得飘、再大会看不出来）
+    · pivot 50%/50%（从中心缩放，避免从角落"甩"进来）
+    · duration 150ms —— 用户指定；比 Material 默认 300ms 快一倍，
+      属于"轻快"档次，切页不拖沓
+
+  ⚠️ 注意 interpolator 用 decelerate（先快后慢）——
+     进场动画应该在接近终点时减速，符合物理直觉。
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/decelerate_interpolator">
+
+    <alpha
+        android:duration="150"
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0" />
+
+    <scale
+        android:duration="150"
+        android:fromXScale="0.94"
+        android:fromYScale="0.94"
+        android:toXScale="1.0"
+        android:toYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%" />
+
+</set>
