@@ -26,11 +26,37 @@ class TodayCourseAdapter :
 
     private val items = mutableListOf<Course>()
 
+    /**
+     * 「下一节课」的标识 + 倒计时文案（ADR-109）。
+     *
+     * ⚠️ 只有匹配这个 key 的那张卡片显示倒计时，其余隐藏。
+     *    key = "节次|课程名" —— 同名课在不同节次也能区分。
+     */
+    private var nextKey: String? = null
+    private var nextText: String? = null
+
     fun submit(list: List<Course>) {
         items.clear()
         items.addAll(list)
         notifyDataSetChanged()
     }
+
+    /**
+     * 设置「下一节课」的倒计时（ADR-109）。
+     *
+     * @param key  目标课程的标识（"节次|课程名"）；null = 没有下一节课
+     * @param text 倒计时文案
+     */
+    fun setNextCountdownKey(key: String?, text: String?) {
+        if (key == nextKey && text == nextText) return   // 无变化不刷新
+        nextKey = key
+        nextText = text
+        notifyDataSetChanged()
+    }
+
+    /** 该课程是不是「下一节课」。 */
+    private fun isNext(c: Course): Boolean =
+        nextKey != null && nextKey == "${c.startPeriod}|${c.name}"
 
     class VH(val binding: ItemCourseBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -51,6 +77,8 @@ class TodayCourseAdapter :
         if (payloads.isNotEmpty() && payloads.contains(PAYLOAD_PROGRESS)) {
             bindProgress(holder, position)
             bindDoneBadge(holder, position)
+            // ⚠️ ADR-109：倒计时也要随心跳刷新（否则数字停在首次值）
+            bindCountdown(holder, position)
             return
         }
         super.onBindViewHolder(holder, position, payloads)
@@ -83,6 +111,26 @@ class TodayCourseAdapter :
 
         // 已上完 → 蓝色对勾（ADR-051）
         bindDoneBadge(holder, position)
+
+        // ⚠️ ADR-109：距上课倒计时（只在下节课那张卡片上显示）
+        bindCountdown(holder, position)
+    }
+
+    /**
+     * 绑定「距上课」倒计时（ADR-109）。
+     *
+     * ⚠️ 用户需求：「只显示最近一节课的倒计时 其他的不要
+     *              上完最近一节课之后倒计时自动变为距离下一节课的时间」
+     *
+     * 只有 [isNext] 为真的那张卡片显示，其余 GONE（不占位）。
+     */
+    private fun bindCountdown(holder: VH, position: Int) {
+        val c = items.getOrNull(position) ?: return
+        val show = isNext(c) && !nextText.isNullOrBlank()
+
+        holder.binding.tvCountdown.visibility =
+            if (show) android.view.View.VISIBLE else android.view.View.GONE
+        if (show) holder.binding.tvCountdown.text = nextText
     }
 
     /** 只刷新进度条（payload 路径与全量路径共用）。 */

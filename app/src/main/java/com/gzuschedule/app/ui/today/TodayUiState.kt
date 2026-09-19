@@ -1,5 +1,6 @@
 package com.gzuschedule.app.ui.today
 
+import com.gzuschedule.app.data.local.DayOverride
 import com.gzuschedule.app.domain.model.Course
 import com.gzuschedule.app.domain.model.Exam
 import com.gzuschedule.app.domain.model.Grade
@@ -40,4 +41,15 @@ data class TodayUiState(
      *    仅当今天**还没开始**的下一节课存在时非空；已在上课或今天没课时为 null。
      */
     val nextCourseCountdown: String? = null,
+
+    /**
+     * 今日的调课设置（ADR-105）。
+     *
+     * ⚠️ 用户需求：「那一天突然调了，比如星期一的课，我就选周一，
+     *    那天的课表就临时变成周一的课」「如果周四五突然没课也可以选无」。
+     */
+    val dayOverride: DayOverride = DayOverride.None,
+
+    /** 调课针对的日期（UI 显示提示文案用）。 */
+    val overrideDate: java.time.LocalDate? = null,
 )

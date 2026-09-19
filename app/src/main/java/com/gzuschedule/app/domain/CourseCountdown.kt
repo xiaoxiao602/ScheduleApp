@@ -75,4 +75,12 @@ object CourseCountdown {
         val time = runCatching { LocalTime.parse(startStr.trim()) }.getOrNull() ?: return null
         return LocalDateTime.of(date, time)
     }
+
+    /**
+     * 开课时刻的纯文本（如 "09:00"），用于倒计时列表左侧显示（ADR-106）。
+     *
+     * @return 取不到返回 null
+     */
+    fun startText(startPeriod: Int): String? =
+        runCatching { PeriodTime.startOf(startPeriod) }.getOrNull()?.trim()?.takeIf { it.isNotBlank() }
 }

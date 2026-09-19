@@ -254,6 +254,21 @@
             android:textStyle="bold"
             android:alpha="0.6" />
 
+        <!--
+          ⚠️ ADR-107/109：检查更新。
+
+          ⚠️⚠️ 不能加 layout_marginHorizontal！
+              `item_settings_row` 模板**自带左右边距**，
+              include 时再指定 margin 会叠加 → 这一行比别的行缩进更多。
+             （与 ADR-053 卡片双重缩进是同一类错误。）
+
+             用户反馈：「检查更新位置还是不对」—— 就是这个双重缩进。
+             其他行（btnClearData / btnDiagnostics）都只写 layout 属性，不加 margin。
+        -->
+        <include
+            android:id="@+id/btnCheckUpdate"
+            layout="@layout/item_settings_row" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

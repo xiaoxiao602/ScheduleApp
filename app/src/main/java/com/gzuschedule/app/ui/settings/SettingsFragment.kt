@@ -38,13 +38,14 @@ import com.gzuschedule.app.ui.widget.SettingsRow
 import com.gzuschedule.app.data.local.entity.MetaEntity
 import com.gzuschedule.app.domain.TimeFormats
 import com.gzuschedule.app.domain.WeekCalculator
-import com.yalantis.ucrop.UCrop
 import java.time.LocalDate
 import com.google.android.material.snackbar.Snackbar
 import com.gzuschedule.app.databinding.FragmentSettingsBinding
 import com.gzuschedule.app.ui.grade.GradeListActivity
 import com.gzuschedule.app.ui.exam.ExamListActivity
 import com.gzuschedule.app.ui.login.LoginActivity
+import com.gzuschedule.app.data.local.UpdatePrefs
+import com.gzuschedule.app.data.update.UpdateChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -101,6 +102,8 @@ class SettingsFragment : Fragment() {
         SettingsRow.bind(binding.btnExams.root, R.drawable.ic_exams, "考试安排")
         SettingsRow.bind(binding.btnClearData.root, R.drawable.ic_delete, "清除本地数据")
         SettingsRow.bind(binding.btnDiagnostics.root, R.drawable.ic_diagnostics, "诊断信息")
+        // ⚠️ ADR-107：检查更新
+        setupUpdateCheck()
 
         binding.btnGrades.root.setOnClickListener {
             startActivity(Intent(requireContext(), GradeListActivity::class.java))
@@ -127,7 +130,7 @@ class SettingsFragment : Fragment() {
         // ---- Dock 外观调节（ADR-094：改为二级页）----
         SettingsRow.bind(
             binding.btnDockTuning.root,
-            R.drawable.ic_palette,
+            R.drawable.ic_dock_layout,
             "Dock 外观调节",
         )
         binding.btnDockTuning.root.setOnClickListener {
@@ -137,7 +140,7 @@ class SettingsFragment : Fragment() {
         // ---- 触感反馈（ADR-094：改为二级页）----
         SettingsRow.bind(
             binding.btnHapticTuning.root,
-            R.drawable.ic_diagnostics,
+            R.drawable.ic_vibration,
             "触感反馈",
         )
         binding.btnHapticTuning.root.setOnClickListener {
@@ -160,40 +163,25 @@ class SettingsFragment : Fragment() {
     }
 
     /**
-     * 系统照片选择器（ADR-012）。
+     * 系统照片选择器（ADR-012 / ADR-104）。
      *
      * ⚠️ 用 PickVisualMedia 而非旧的权限方案：
      * 系统进程展示图片并只授予选中那张的临时读取权，
      * **App 无需 READ_MEDIA_IMAGES 等任何存储权限**。
      *
-     * ⚠️ ADR-101：选图后**先进裁剪页**（uCrop），用户可拖拽/缩放决定裁哪部分。
-     *     之前是自动中心裁切，用户无法选择 —— 用户反馈「没有裁切图片的功能」。
+     * ⚠️ ADR-104：**不做裁剪**（用户决定砍掉）。
+     *     裁剪尝试过三种方案全部失败，成本远超收益：
+     *       · uCrop 2.2.10        —— 一选图就崩（要求 file:// 输出 Uri）
+     *       · 系统裁剪 Intent      —— 小米 ROM 阉割，提示「没有裁剪功能」
+     *       · 自研裁剪页           —— Uri 授权跨 Activity 传递在部分 ROM 上失败
+     *     现在直接保存原图，由 UserProfileStore 做**中心方形裁切**（无声、无 UI）。
      */
     private val pickAvatar = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
         if (uri == null) return@registerForActivityResult
-        // → 进入裁剪页（不再直接保存）
-        launchCropper(uri)
-    }
 
-    /**
-     * 裁剪结果回调（uCrop）。
-     *
-     * ⚠️ uCrop 把裁剪结果写到一个**临时输出文件**，这里再读它存为头像。
-     */
-    private val cropAvatar = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-    ) { result ->
-        val data = result.data
-        val outUri = UCrop.getOutput(data ?: return@registerForActivityResult)
-
-        // 用户取消裁剪 → 什么都不做（保留原头像）
-        if (result.resultCode != android.app.Activity.RESULT_OK || outUri == null) {
-            return@registerForActivityResult
-        }
-
-        val ok = UserProfileStore.saveAvatar(requireContext(), outUri.toString())
+        val ok = UserProfileStore.saveAvatar(requireContext(), uri.toString())
         if (ok) {
             renderProfile()
             MessageDialog.toast(requireContext(), "头像已更新")
@@ -201,58 +189,6 @@ class SettingsFragment : Fragment() {
             MessageDialog.show(requireContext(), "保存失败", "头像没能保存成功，请换一张图片再试。")
         }
     }
-
-    /** 打开 uCrop 裁剪页（正方形，可拖拽/缩放/旋转）。 */
-    private fun launchCropper(source: android.net.Uri) {
-        val ctx = requireContext()
-
-        // uCrop 需要一个「结果输出」的 Uri（写到 App 私有缓存，无需权限）
-        val outFile = java.io.File(ctx.cacheDir, "avatar_crop_${System.currentTimeMillis()}.png")
-        val outUri = androidx.core.content.FileProvider.getUriForFile(
-            ctx, "${ctx.packageName}.fileprovider", outFile,
-        )
-
-        val options = UCrop.Options().apply {
-            // 正方形头像（与 AvatarView 的圆形裁切一致）
-            withAspectRatio(1f, 1f)
-            // 锁定正方形比例，避免用户拖成非正方形
-            setFreeStyleCropEnabled(false)
-
-            // ⚠️ 配色用项目自己的品牌色（R.color.brand_primary）。
-            //    不能用 com.google.android.material.R.attr.colorPrimary ——
-            //    Material 3 已移除该 attr（编译报 Unresolved reference）。
-            val primary = androidx.core.content.ContextCompat.getColor(
-                ctx, com.gzuschedule.app.R.color.brand_primary,
-            )
-
-            setToolbarColor(primary)
-            setToolbarWidgetColor(android.graphics.Color.WHITE)
-            setStatusBarColor(darken(primary, 0.85f))
-            setActiveControlsWidgetColor(primary)
-            setRootViewBackgroundColor(
-                androidx.core.content.ContextCompat.getColor(ctx, android.R.color.white),
-            )
-
-            // 输出质量
-            setCompressionFormat(android.graphics.Bitmap.CompressFormat.PNG)
-            setCompressionQuality(100)
-
-            // 圆形裁剪网格（提示这是头像）
-            setCircleDimmedLayer(true)
-            setShowCropFrame(false)
-
-            setHideBottomControls(false)
-        }
-
-        val intent = UCrop.of(source, outUri)
-            .withOptions(options)
-            .getIntent(ctx)
-        cropAvatar.launch(intent)
-    }
-
-    /** 把颜色按比例调暗（用于状态栏，避免与工具栏同色分不清）。 */
-    private fun darken(color: Int, factor: Float): Int =
-        androidx.core.graphics.ColorUtils.blendARGB(color, android.graphics.Color.BLACK, 1f - factor)
 
     private fun launchAvatarPicker() {
         pickAvatar.launch(
@@ -400,6 +336,31 @@ class SettingsFragment : Fragment() {
      * 之前是「设置第一周星期一」按钮 + 下方一行说明文字，
      * 现在统一进列表行：标题左、当前值右，更紧凑也更像"可点击"。
      */
+    private fun setupUpdateCheck() {
+        // ⚠️ ADR-108：用 ic_update（tint=colorControlNormal，灰色），
+        //    而不是 ic_sync（tint=colorOnPrimary，白色 —— 给蓝按钮用的）。
+        //    用户反馈：「这个更新的图片要和上面图标一样的颜色
+        //              图标位置和文字也和上面一样对齐」
+        //    SettingsRow.bind 保证图标/标题/箭头的位置与其他行完全一致。
+        SettingsRow.bind(binding.btnCheckUpdate.root, R.drawable.ic_update, "检查更新")
+
+        binding.btnCheckUpdate.root.setOnClickListener {
+            checkUpdate(manual = true)
+        }
+
+        // 长按切换「自动检查」
+        binding.btnCheckUpdate.root.setOnLongClickListener {
+            val cur = UpdatePrefs.isAutoCheck(requireContext())
+            UpdatePrefs.setAutoCheck(requireContext(), !cur)
+            MessageDialog.show(
+                requireContext(),
+                if (!cur) "已开启自动检查" else "已关闭自动检查",
+                if (!cur) "每次打开 App 时会自动检查是否有新版本。" else "不再自动检查更新。",
+            )
+            true
+        }
+    }
+
     private suspend fun renderFirstMonday() {
         val raw = db.metaDao().get(AppDatabase.MetaKeys.FIRST_MONDAY)
         val value = if (raw.isNullOrBlank()) {
@@ -559,5 +520,57 @@ class SettingsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+
+}
+
+    /** 执行检查。[manual] = 用户主动点击（会显示「已是最新」）。 */
+    private fun checkUpdate(manual: Boolean) {
+        val vName = runCatching {
+            requireContext().packageManager
+                .getPackageInfo(requireContext().packageName, 0).versionName
+        }.getOrNull().orEmpty()
+
+        // 手动点击时给个即时反馈
+        if (manual) {
+            MessageDialog.show(requireContext(), "正在检查更新…", "正在访问 GitHub 仓库…")
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val r = UpdateChecker.check(vName)
+
+            when {
+                r.error != null -> {
+                    if (manual) {
+                        MessageDialog.show(
+                            requireContext(), "检查失败",
+                            "${r.error}\n\n请检查网络后重试。",
+                        )
+                    }
+                }
+
+                r.hasUpdate -> {
+                    MessageDialog.show(
+                        requireContext(),
+                        "发现新版本 ${r.latestVersion}",
+                        buildString {
+                            append("当前版本：$vName\n")
+                            append("最新版本：${r.latestVersion}\n\n")
+                            r.notes?.takeIf { it.isNotBlank() }?.let {
+                                append("更新内容：\n${it.take(300)}")
+                            }
+                        },
+                    )
+                }
+
+                else -> {
+                    if (manual) {
+                        MessageDialog.show(
+                            requireContext(), "已是最新版本",
+                            "当前版本 $vName 已是最新。",
+                        )
+                    }
+                }
+            }
+        }
     }
 }

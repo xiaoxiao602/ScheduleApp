@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  触感反馈图标（ADR-111，Material Symbols: vibration）。
+
+  ⚠️ 为什么不复用 ic_diagnostics：
+     原来「触感反馈」误用了 ic_diagnostics（bug_report 字形），
+     与「诊断信息」完全一样 → 用户反馈「你的触感反馈图标怎么和诊断信息一样」。
+     改用 vibration 字形，与「震动反馈」语义直接对应。
+
+  ⚠️ tint 必须用 colorControlNormal —— 与设置页其他行一致（ADR-108 的教训）。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M0,15h2V9H0v6zM3,17h2V7H3v10zM22,9v6h2V9h-2zM19,17h2V7h-2v10zM16.5,3h-9C6.67,3 6,3.67 6,4.5v15c0,0.83 0.67,1.5 1.5,1.5h9c0.83,0 1.5,-0.67 1.5,-1.5v-15C18,3.67 17.33,3 16.5,3zM16,19H8V5h8v14z" />
+</vector>

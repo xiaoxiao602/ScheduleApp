@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.gzuschedule.app.data.local.AppDatabase
+import com.gzuschedule.app.data.local.DayOverrideDao
+import com.gzuschedule.app.data.local.DayOverride
 import com.gzuschedule.app.domain.HolidayCalendar
 import com.gzuschedule.app.domain.TermTitle
 import com.gzuschedule.app.domain.WeekCalculator
@@ -45,6 +47,16 @@ data class ScheduleUiState(
      * 故渲染时把假日的课程**直接跳过**，不做任何标记。
      */
     val holidays: HolidayCalendar = HolidayCalendar.EMPTY,
+
+    /**
+     * 当日调课表（ADR-105）：日期字符串（ISO）→ 调课设置。
+     *
+     * ⚠️ 用户需求：「今天页改变，那一周的课程页看也改变，变成我调的」。
+     *    渲染时按「该周每一天对应的日期」查这张表：
+     *      · UseDay(d) → 显示第 d 天的课
+     *      · NoClass   → 那天不显示课
+     */
+    val dayOverrides: Map<String, DayOverride> = emptyMap(),
 ) {
     /** 当前查看的是不是今天所在的周。 */
     val isViewingCurrentWeek: Boolean get() = week == currentWeek
@@ -80,6 +92,8 @@ data class ScheduleUiState(
 class ScheduleViewModel(
     private val repo: ScheduleRepository,
     private val metaReader: suspend (String) -> String?,
+    /** ⚠️ ADR-105：当日调课 DAO。 */
+    private val dayOverrideDao: DayOverrideDao,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ScheduleUiState())
@@ -138,12 +152,24 @@ class ScheduleViewModel(
                 //    设置页改完「第一周星期一」后触发，让下面 collect 重新执行，
                 //    从而重新读 DB 的 FIRST_MONDAY 并重算周次。
                 .combine(semesterReloadTick) { triple, _ -> triple }
-                .collect { (courses, term, manual) ->
+                // ⚠️ ADR-105：把调课表也并入 —— 用户在今日页调课后，
+                //    周课表页要立刻跟着变（用户需求：「那一周的课程页看也改变」）。
+                .combine(dayOverrideDao.observeAll()) { triple, overrides ->
+                    Triple(triple.first, triple.second, triple.third) to overrides
+                }
+                .collect { (triple, overrides) ->
+                    val (courses, term, manual) = triple
                     // ⚠️ 元数据在 collect 里读 —— 同步后 meta 也会变，
                     //    重新读才能拿到新的学期名/第一周周一/假日。
                     val fm = metaReader(AppDatabase.MetaKeys.FIRST_MONDAY)
                         ?.takeIf { it.isNotBlank() }
                     val autoWeek = computeCurrentWeek(fm, courses)
+
+                    // ⚠️ ADR-105：把调课记录整理成「日期 → 调课」映射。
+                    //    渲染层按「该周每一天对应的日期」查表决定显示哪天的课。
+                    val overrideMap = overrides.associate {
+                        it.date to DayOverride.from(it)
+                    }
 
                     _state.value = ScheduleUiState(
                         isLoading = false,
@@ -161,6 +187,8 @@ class ScheduleViewModel(
                         holidays = HolidayCalendar.fromJson(
                             metaReader(AppDatabase.MetaKeys.HOLIDAYS),
                         ),
+                        // ⚠️ ADR-105：当日调课表（日期字符串 → 调课设置）
+                        dayOverrides = overrideMap,
                     )
                 }
         }
@@ -223,10 +251,12 @@ class ScheduleViewModel(
     class Factory(
         private val repo: ScheduleRepository,
         private val metaReader: suspend (String) -> String?,
+        /** ⚠️ ADR-105：当日调课 DAO。 */
+        private val dayOverrideDao: DayOverrideDao,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            ScheduleViewModel(repo, metaReader) as T
+            ScheduleViewModel(repo, metaReader, dayOverrideDao) as T
     }
 
     private companion object {

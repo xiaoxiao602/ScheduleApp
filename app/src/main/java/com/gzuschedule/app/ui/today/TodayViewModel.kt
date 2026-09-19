@@ -14,6 +14,9 @@ import com.gzuschedule.app.domain.model.Grade
 import com.gzuschedule.app.domain.repository.ExamRepository
 import com.gzuschedule.app.domain.repository.GradeRepository
 import com.gzuschedule.app.domain.repository.ScheduleRepository
+import com.gzuschedule.app.data.local.DayOverride
+import com.gzuschedule.app.data.local.DayOverrideDao
+import com.gzuschedule.app.data.local.DayOverrideEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +36,8 @@ class TodayViewModel(
     private val gradeRepo: GradeRepository,
     private val examRepo: ExamRepository,
     private val metaReader: suspend (String) -> String?,
+    /** ⚠️ ADR-105：当日调课 DAO。 */
+    private val dayOverrideDao: DayOverrideDao,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TodayUiState())
@@ -65,7 +70,8 @@ class TodayViewModel(
             }
 
             val week = computeWeek()
-            val today = LocalDate.now().dayOfWeek.value
+            val todayDate = LocalDate.now()
+            val today = todayDate.dayOfWeek.value
 
             // 学业数据（可能为空 —— 刚入学时成绩/考试本来就没有）
             val grades = runCatching {
@@ -76,17 +82,40 @@ class TodayViewModel(
                 examRepo.observeExams().first()
             }.getOrDefault(emptyList())
 
+            // ⚠️ ADR-105：当日调课。
+            //    用户需求：「那一天突然调了，比如星期一的课，我就选周一，
+            //    那天的课表就临时变成周一的课」「周四五突然没课也可以选无」。
+            //
+            //    逻辑：先查今天有没有调课记录 →
+            //      · 无记录       → 用今天的课（原样）
+            //      · NoClass     → 今天没有课
+            //      · UseDay(d)   → 用第 d 天的课替换
+            val override = runCatching {
+                DayOverride.from(dayOverrideDao.get(todayDate.toString()))
+            }.getOrDefault(DayOverride.None)
+
+            val effectiveDay = when (override) {
+                is DayOverride.UseDay -> override.sourceDay
+                else -> today
+            }
+
+            val todayCourses = if (override is DayOverride.NoClass) {
+                emptyList()
+            } else {
+                all.filter { it.dayOfWeek == effectiveDay && it.occursInWeek(week) }
+                    .sortedBy { it.startPeriod }
+            }
+
             val now = LocalDateTime.now()
-            val todayDate = now.toLocalDate()
-            val todayCourses = all
-                .filter { it.dayOfWeek == today && it.occursInWeek(week) }
-                .sortedBy { it.startPeriod }
 
             _state.value = TodayUiState(
                 hasAnyData = all.isNotEmpty(),
                 week = week,
                 todayCourses = todayCourses,
                 lastSyncDisplay = readLastSync(),
+                // ⚠️ ADR-105：把调课状态传给 UI（显示提示 + 按钮高亮）
+                dayOverride = override,
+                overrideDate = todayDate,
                 recentGrades = grades.take(HOME_MAX_ITEMS),
                 // ⚠️ ADR-049：「提前一个月显示」—— 只保留未来 30 天内的考试。
                 //    Exam.date 是 LocalDate?（可为 null，教务有时不给日期）——
@@ -194,14 +223,38 @@ class TodayViewModel(
         return all.minOfOrNull { it.startWeek }?.coerceAtLeast(1) ?: 1
     }
 
+    // ⚠️ ADR-105：当日调课的读写（UI 调用）。
+    //
+    //    用户需求：「那一天突然调了，比如星期一的课，我就选周一，
+    //    那天的课表就临时变成周一的课」「周四五突然没课也可以选无」。
+
+    /** 设置（或清除）某天的调课，然后刷新界面。 */
+    fun setDayOverride(date: java.time.LocalDate, override: DayOverride) {
+        viewModelScope.launch {
+            runCatching {
+                val key = date.toString()
+                when (override) {
+                    // 不调课 → 删除记录
+                    is DayOverride.None -> dayOverrideDao.remove(key)
+                    is DayOverride.NoClass ->
+                        dayOverrideDao.put(DayOverrideEntity(key, DayOverride.SOURCE_NONE))
+                    is DayOverride.UseDay ->
+                        dayOverrideDao.put(DayOverrideEntity(key, override.sourceDay))
+                }
+            }
+            load()
+        }
+    }
+
     class Factory(
         private val scheduleRepo: ScheduleRepository,
         private val gradeRepo: GradeRepository,
         private val examRepo: ExamRepository,
         private val metaReader: suspend (String) -> String?,
+        private val dayOverrideDao: DayOverrideDao,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            TodayViewModel(scheduleRepo, gradeRepo, examRepo, metaReader) as T
+            TodayViewModel(scheduleRepo, gradeRepo, examRepo, metaReader, dayOverrideDao) as T
     }
 }

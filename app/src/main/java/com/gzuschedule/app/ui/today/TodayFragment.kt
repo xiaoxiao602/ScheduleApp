@@ -34,6 +34,9 @@ import com.gzuschedule.app.domain.model.Grade
 import com.gzuschedule.app.ui.exam.ExamListActivity
 import com.gzuschedule.app.ui.grade.GradeListActivity
 import com.gzuschedule.app.ui.login.LoginActivity
+import com.gzuschedule.app.data.local.DayOverride
+import com.gzuschedule.app.ui.widget.DayOverrideDialog
+import com.gzuschedule.app.domain.CourseCountdown
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -88,10 +91,14 @@ class TodayFragment : Fragment() {
                 gradeRepo = LocalGradeRepository(db),
                 examRepo = LocalExamRepository(db),
                 metaReader = { key -> db.metaDao().get(key) },
+                // ⚠️ ADR-105：当日调课
+                dayOverrideDao = db.dayOverrideDao(),
             ),
         )[TodayViewModel::class.java]
 
-        val adapter = TodayCourseAdapter()
+        // ⚠️ ADR-109：adapter 现在是**字段**（见类成员声明处），
+        //    因为心跳里的 refreshCountdowns() 要用它。
+        adapter = TodayCourseAdapter()
         binding.todayList.layoutManager = LinearLayoutManager(requireContext())
         binding.todayList.adapter = adapter
 
@@ -134,6 +141,12 @@ class TodayFragment : Fragment() {
         //
         // ⚠️ ADR-049：同一心跳里也刷新「下一节课倒计时」——
         //    它是相对当前时刻算的，不刷新会一直停在首次渲染的值。
+        // ⚠️ ADR-106：倒计时心跳。
+        //    ⚠️⚠️ 不再调 viewModel.load()！
+        //       旧实现每 30 秒 load() 一次，而 load() 是**异步读库**的 ——
+        //       多次未完成的 load() 会积压，state 被反复覆写 →
+        //       倒计时数字来回跳，看起来"越来越长"（用户反馈的 bug）。
+        //       现在只重算倒计时文案（纯计算，不读库、不碰 state）。
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (true) {
@@ -141,13 +154,19 @@ class TodayFragment : Fragment() {
                     // 倒计时重算（每 30 秒一次即可 —— 显示粒度为分钟）
                     countdownTick += 1
                     if (countdownTick % COUNTDOWN_EVERY_N_TICKS == 0) {
-                        viewModel.load()
+                        refreshCountdowns()
                     }
                     delay(CourseProgressBinder.TICK_MS)
                 }
             }
         }
     }
+
+    /**
+     * ⚠️ ADR-109：升为**字段**（原来是 onCreateView 的局部变量）。
+     *    因为心跳里的 refreshCountdowns() 需要访问它来设置倒计时。
+     */
+    private lateinit var adapter: TodayCourseAdapter
 
     /** 心跳计数（用于降低倒计时重算频率）。 */
     private var countdownTick = 0
@@ -259,9 +278,32 @@ class TodayFragment : Fragment() {
         binding.todayEmpty.visibility = if (hasToday) View.GONE else View.VISIBLE
 
         // 区分「今天没课」与「没同步」
+        // ⚠️ ADR-105：若有调课，文案要体现出来（否则用户以为调课没生效）
         binding.tvEmptyText.text = when {
             !state.hasAnyData -> "尚未同步课表"
+            state.dayOverride is DayOverride.NoClass -> "今天调课：无课"
             else -> "今天没有课，休息一下"
+        }
+
+        // ⚠️ ADR-105：调课入口 + 状态提示
+        //    · 空状态卡片上的按钮
+        //    · 有调课时在标题旁显示提示
+        binding.btnDayOverrideEmpty.visibility =
+            if (state.hasAnyData) View.VISIBLE else View.GONE
+        binding.btnDayOverrideEmpty.setOnClickListener {
+            showDayOverrideDialog(state)
+        }
+
+        // 有调课时，把「今日课程」的计数文案改成提示
+        // ⚠️ ADR-108：这块现在可点击 → 弹调课弹窗（用户要求）
+        binding.tvTodayCount.text = if (state.dayOverride is DayOverride.UseDay) {
+            val d = (state.dayOverride as DayOverride.UseDay).sourceDay
+            "${todayCourses.size} 门 · 按${DayOverride.dayName(d)}"
+        } else {
+            "${todayCourses.size} 门"
+        }
+        binding.tvTodayCount.setOnClickListener {
+            showDayOverrideDialog(state)
         }
 
         binding.tvUpdatedAt.text = if (state.hasAnyData) {
@@ -270,16 +312,78 @@ class TodayFragment : Fragment() {
             "尚未更新"
         }
 
-        // ⚠️ ADR-049：下一节课倒计时（用户：「课程那个卡片 加上距离上课的时间」）
-        binding.tvNextCourseCountdown.text = state.nextCourseCountdown
-        binding.tvNextCourseCountdown.visibility =
-            if (state.nextCourseCountdown.isNullOrBlank()) View.GONE else View.VISIBLE
+        // ⚠️ ADR-106：今日所有课的倒计时列表
+        //    （取代旧的单个 tvNextCourseCountdown）
+        refreshCountdowns()
 
         adapter.submit(todayCourses)
 
         // ---- 学业数据卡片（ADR-009 方案 A：无数据整块隐藏）----
         renderGrades(state.recentGrades)
         renderExams(state.upcomingExams)
+    }
+
+    /**
+     * 弹出「当日调课」选择（ADR-105）。
+     *
+     * ⚠️ 用户需求：
+     *    「那一天突然调了，比如星期一的课，我就选择周一，
+     *      那天的课表就会临时变成周一的课。适用于周六日调课」
+     *    「周四五突然没课，我也可以在今日课表里选择无，那一天就没课了」
+     */
+    private fun showDayOverrideDialog(state: TodayUiState) {
+        val date = state.overrideDate ?: return
+        DayOverrideDialog.show(
+            context = requireContext(),
+            date = date,
+            current = state.dayOverride,
+        ) { picked ->
+            viewModel.setDayOverride(date, picked)
+        }
+    }
+
+    /**
+     * 计算「下一节课」的倒计时文案（ADR-109）。
+     *
+     * ⚠️ 用户需求：
+     *    「只显示最近一节课的倒计时 其他的不要
+     *      上完最近一节课之后倒计时自动变为距离下一节课的时间」
+     *
+     * ⚠️ 「自动切换」的原理：每次调用都按 `start.isAfter(now)` 重新筛选，
+     *    最近那节一旦开课就被排除 → 自动指向下一节。**无需任何定时器。**
+     *
+     * ⚠️ 关键：**在 UI 层自己算**，不依赖 ViewModel 的 state。
+     *    state 只在 load() 时更新（异步读库），心跳触发时可能拿到旧值 → 数字跳变。
+     *
+     * @return 「距上课 X」文案 + 对应课程 id；今天没有未开始的课则 null
+     */
+    private fun nextCountdown(): Pair<String, String>? {
+        val now = java.time.LocalDateTime.now()
+        val today = now.toLocalDate()
+        val courses = viewModel.state.value.todayCourses
+
+        val next = courses
+            .mapNotNull { c ->
+                val start = CourseCountdown.startOf(today, c.startPeriod)
+                if (start == null || !start.isAfter(now)) null else c to start
+            }
+            .minByOrNull { it.second }
+            ?: return null
+
+        val (course, start) = next
+        val text = CourseCountdown.text(now, start) ?: return null
+        // ⚠️ 用「节次+课程名」做 key —— 同名课在不同节次也能区分
+        return text to "${course.startPeriod}|${course.name}"
+    }
+
+    /**
+     * 刷新所有课程卡片的倒计时（ADR-109）。
+     *
+     * ⚠️ 只有「下一节课」那张卡片显示倒计时，其余全部隐藏。
+     */
+    private fun refreshCountdowns() {
+        val next = nextCountdown()
+        adapter.setNextCountdownKey(next?.second, next?.first)
     }
 
     /** 渲染「最近成绩」。空列表则隐藏整个区块。 */

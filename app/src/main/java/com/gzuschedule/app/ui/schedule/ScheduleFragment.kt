@@ -34,6 +34,7 @@ import com.gzuschedule.app.databinding.ItemWeekOptionBinding
 import com.gzuschedule.app.databinding.SheetWeekPickerBinding
 import com.gzuschedule.app.domain.model.Course
 import com.gzuschedule.app.ui.widget.CourseDetailDialog
+import com.gzuschedule.app.data.local.DayOverride
 import kotlinx.coroutines.launch
 
 /**
@@ -126,6 +127,8 @@ class ScheduleFragment : Fragment() {
             ScheduleViewModel.Factory(
                 repo = LocalScheduleRepository(db),
                 metaReader = { key -> db.metaDao().get(key) },
+                // ⚠️ ADR-105：当日调课
+                dayOverrideDao = db.dayOverrideDao(),
             ),
         )[ScheduleViewModel::class.java]
 
@@ -356,13 +359,38 @@ class ScheduleFragment : Fragment() {
             // ⚠️ ADR-060：假日当天不给课程 —— 用户明确选「就当没课」
             if (weekHolidays.containsKey(day)) continue
 
+            // ⚠️ ADR-105：当日调课。
+            //    用户需求：「今天页改变，那一周的课程页看也改变，变成我调的」
+            //    —— 所以周课表**同一天**也要跟着变。
+            //
+            //    查表：该天对应的日期 → 有没有调课
+            //      · UseDay(d) → 改用第 d 天的课（显示在第 day 天下面）
+            //      · NoClass   → 该天不显示课
+            val dateOfDay = monday?.plusDays((day - 1).toLong())
+            val override = dateOfDay?.let { state.dayOverrides[it.toString()] }
+
+            if (override is DayOverride.NoClass) continue   // 该天临时无课
+
+            // 调课后的「有效星期」：UseDay 用源日，否则用原始 day
+            val effectiveDay =
+                if (override is DayOverride.UseDay) override.sourceDay else day
+
             val dayCourses = state.courses
-                .filter { it.dayOfWeek == day && it.occursInWeek(state.week) }
+                .filter { it.dayOfWeek == effectiveDay && it.occursInWeek(state.week) }
                 .sortedBy { it.startPeriod }
             if (dayCourses.isEmpty()) continue
 
             val date = monday?.plusDays((day - 1).toLong())
-            binding.dayList.addView(dayHeader(day, date, dayCourses.size))
+
+            // ⚠️ 调课时在分组标题上标注，否则用户看不出「这天为什么是这些课」
+            val headerExtra = when (override) {
+                is DayOverride.UseDay ->
+                    "（调课：${DayOverride.dayName(override.sourceDay)}）"
+                else -> null
+            }
+            binding.dayList.addView(
+                dayHeader(day, date, dayCourses.size, headerExtra),
+            )
 
             for (course in dayCourses) {
                 val card = courseCard(course)
@@ -385,8 +413,18 @@ class ScheduleFragment : Fragment() {
         }
     }
 
-    /** 某天的分组标题：「周三 16日 · 2 门」。 */
-    private fun dayHeader(day: Int, date: LocalDate?, count: Int): View {
+    /**
+     * 某天的分组标题：「周三 16日 · 2 门」。
+     *
+     * ⚠️ ADR-105：[extra] 用于调课标注，如「（调课：周一）」——
+     *    不标的话用户看不出「这天为什么是这些课」。
+     */
+    private fun dayHeader(
+        day: Int,
+        date: LocalDate?,
+        count: Int,
+        extra: String? = null,
+    ): View {
         val ctx = requireContext()
         val row = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -401,6 +439,7 @@ class ScheduleFragment : Fragment() {
                     append("周${DAY_LABELS[day - 1].removePrefix("周")}")
                     date?.let { append(" ${it.dayOfMonth}日") }
                     if (isToday) append(" · 今天")
+                    if (!extra.isNullOrBlank()) append(" $extra")
                 }
                 textSize = 15f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)

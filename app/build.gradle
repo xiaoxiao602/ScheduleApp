@@ -19,9 +19,9 @@ android {
         applicationId "com.gzuschedule.app"
         minSdk 26          // Android 8.0，覆盖绝大多数在用机型
         targetSdk 35
-        versionCode 2
+        versionCode 3
         // ADR-086：去除 beta 标识，定为正式版 1.0.0
-        versionName "1.0.1"
+        versionName "1.0.2"
     }
 
     buildTypes {
@@ -124,13 +124,13 @@ dependencies {
     //    而 AGP 8.7.3 推荐上限就是 35 —— 引入即推高工具链，与 Haze 同因，故放弃。
     //    滚轮改用「Compose LazyColumn + 官方吸附 API」自研（见 WeekWheel.kt 说明）。
 
-    // ==================== 图片裁剪（ADR-101）====================
-    // ⚠️ 用户反馈：「没有裁切图片的功能」—— 之前是自动中心裁切，用户无法选择。
-    //    改用 uCrop（成熟的 Android 裁剪库，拖拽/缩放/旋转/正方形锁定）。
-    //    ⚠️ 它在 **JitPack** 上，需在 settings.gradle 加 jitpack.io 仓库
-    //       （已加，否则解析会 FAILED）。
-    //    ⚠️ 依赖已通过 checkDebugAarMetadata 校验：不要求更高 compileSdk。
-    implementation 'com.github.yalantis:ucrop:2.2.10'
+    // ⚠️ ADR-102：**不引入裁剪库**。
+    //    曾试 uCrop 2.2.10（需 JitPack 仓库），但实测「一选图就崩」——
+    //    它要求输出是 file:// 风格 Uri，传 FileProvider 的 content:// 时内部失败。
+    //    改用**系统自带裁剪**（Intent "com.android.camera.action.CROP"）：
+    //      · 零依赖、零包体积增长
+    //      · UI 是系统原生的，用户熟悉
+    //      · 系统裁剪只支持正方形 —— 正好是头像所需
 
     testImplementation 'junit:junit:4.13.2'
 }

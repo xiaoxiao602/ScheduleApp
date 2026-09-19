@@ -31,8 +31,9 @@ import com.gzuschedule.app.data.local.entity.MetaEntity
         ExamEntity::class,
         GradeEntity::class,
         MetaEntity::class,
+        DayOverrideEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -41,6 +42,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun examDao(): ExamDao
     abstract fun gradeDao(): GradeDao
     abstract fun metaDao(): MetaDao
+
+    /** ⚠️ ADR-105：临时调课（当日替换/清空）。 */
+    abstract fun dayOverrideDao(): DayOverrideDao
 
     companion object {
         private const val DB_NAME = "gzuschedule.db"

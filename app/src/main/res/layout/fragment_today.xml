@@ -161,34 +161,47 @@
                 android:letterSpacing="-0.01"
                 android:textColor="?attr/colorOnSurface" />
 
-            <TextView
+            <!--
+              ⚠️ ADR-108：计数区可点击 → 弹调课弹窗。
+                 用户需求：「这个课表更改以后可以让我点击第二张图圈起来的地方
+                           （「3门 · 按周二」）弹出和调课弹窗一样的界面继续修改
+                           动态生效」
+
+              ⚠️ 用 MaterialButton(style="?attr/borderlessButtonStyle") 而非 TextView：
+                 既保留原视觉（无背景、无边框），又有涟漪反馈表明"可点击"。
+            -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/tvTodayCount"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:textColor="?attr/colorPrimary"
-                android:alpha="0.75"
+                android:alpha="0.85"
+                android:minHeight="0dp"
                 tools:text="2 门" />
         </LinearLayout>
 
         <!--
-          ⚠️ ADR-049：下一节课倒计时（用户：「课程那个卡片 加上距离上课的时间
-          比如 距离上课3h40分钟」）。
-          放在「今日课程」标题下方 —— 仅当今天有尚未开始的课时才显示。
+          ⚠️ ADR-109：倒计时**不再单独占一行**。
+
+          用户反馈：「首页这个布局不对 按照这张图的布局做
+                    不需要在左边显示课程名称 只是在原来的布局上加我跟你说的功能」
+
+          也就是说：保留原有「节次 | 分隔线 | 课程名+信息」的卡片布局，
+          倒计时作为**卡片内的一行**显示（见 item_course.xml 的 tvCountdown），
+          而不是在列表上方另起一块。
+
+          ⚠️ 历史（避免重复踩）：
+            ADR-049 最初就是个 TextView 放在列表上方，后来 ADR-106 改成列表容器，
+            都不符合用户想要的"在原布局上加"。ADR-109 回归"卡片内显示"。
         -->
-        <TextView
-            android:id="@+id/tvNextCourseCountdown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:paddingHorizontal="16dp"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:visibility="gone"
-            tools:text="距上课 3h40分"
-            tools:visibility="visible" />
 
         <!-- 课程列表（RecyclerView，嵌套滚动交由外层 ScrollView 处理）
              ⚠️ ADR-053：paddingHorizontal 必须为 0 —— 卡片自己已有 16dp
@@ -211,35 +224,68 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="8dp"
-            app:cardCornerRadius="@dimen/card_corner_medium"
+            app:cardCornerRadius="@dimen/card_corner_large"
             app:cardElevation="0dp"
             app:cardBackgroundColor="@color/card_surface"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/card_stroke"
             android:visibility="gone">
 
+            <!--
+              ⚠️ ADR-108：空状态卡片尺寸与课程卡片**完全一致**。
+
+                 用户反馈：「第一张图这个卡片要保持和上面一样大 长宽高全部一致」
+
+                 对照 item_course.xml 的卡片：
+                   · 圆角        card_corner_large（原来用的 medium ✗）
+                   · 左边距      layout_marginHorizontal 16dp ✓
+                   · 内部 padding 18dp（原来是 36dp ✗）
+                   · 最小高度    minHeight 104dp（原来没有 ✗）
+                   · 描边        strokeWidth 1dp + card_stroke（原来没有 ✗）
+                 现在四项全部对齐。
+            -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:padding="36dp">
+                android:minHeight="104dp"
+                android:padding="18dp">
 
                 <TextView
                     android:id="@+id/tvEmptyIcon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="✦"
-                    android:textSize="34sp"
+                    android:textSize="24sp"
                     android:alpha="0.3" />
 
                 <TextView
                     android:id="@+id/tvEmptyText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:text="尚未同步课表"
                     android:textSize="14sp"
                     android:alpha="0.7" />
+
+                <!--
+                  ⚠️ ADR-105/108：当日调课入口（空状态卡片内）。
+                -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDayOverrideEmpty"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:minHeight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingVertical="6dp"
+                    android:text="调课"
+                    android:textSize="13sp" />
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

@@ -85,6 +85,29 @@
                 tools:text="A101 · 张老师" />
 
             <!--
+              ⚠️ ADR-109：距上课倒计时（卡片内显示）。
+
+              用户需求：「只显示最近一节课的倒计时 其他的不要
+                        上完最近一节课之后倒计时自动变为距离下一节课的时间」
+                        「只是在原来的布局上加我跟你说的功能」
+
+              ⚠️ 只在「今天最近的一节还没开始的课」这张卡片上显示，
+                 其余卡片的这个 TextView 是 GONE（不占位）。
+                 由 TodayFragment 的绑定逻辑控制。
+            -->
+            <TextView
+                android:id="@+id/tvCountdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                android:visibility="gone"
+                tools:text="距上课 8h16分"
+                tools:visibility="visible" />
+
+            <!--
               上课进度条（ADR-031）。
               仅当该课程**正在进行中**时显示（代码里控制 visibility），
               进度随时间推进；下课即结束。

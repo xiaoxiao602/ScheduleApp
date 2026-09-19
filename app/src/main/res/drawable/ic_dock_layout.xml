@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dock 外观调节图标（ADR-111，Material Symbols: dashboard / view_quilt）。
+
+  ⚠️ 为什么不复用 ic_palette：
+     原来「Dock 外观调节」与「课程外观」都用 ic_palette（调色板），
+     两行图标完全一样 → 视觉上无法区分。
+     「课程外观」改的是颜色（调色板合适），
+     「Dock 外观调节」改的是尺寸/布局 → 用 dashboard（面板排列）更贴切。
+
+  ⚠️ tint = colorControlNormal，与其他设置行一致。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M3,13h8V3H3V13zM3,21h8v-6H3V21zM13,21h8V11h-8V21zM13,3v6h8V3H13z" />
+</vector>

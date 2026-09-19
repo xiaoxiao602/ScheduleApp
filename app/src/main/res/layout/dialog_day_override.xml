@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  当日调课弹窗（ADR-105）。
+
+  ⚠️ 用户需求：
+     「比如周四五突然没课我也可以在今日课表里选择无，那一天就没课了」
+     「比如星期一的课，那我就选择周一，那天的课表就会临时变成周一的课」
+
+  选项：
+     · 不调课（默认，恢复原样）
+     · 无课（那天清空）
+     · 周一 ~ 周日（用那天的课表替换）
+
+  ⚠️ 圆角：布局自带 bg_dialog_card（28dp），
+     且 dialog.show() 后必须调 DialogCorner.applyRounded（ADR-098 的教训）。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:paddingTop="20dp"
+    android:paddingBottom="12dp">
+
+    <TextView
+        android:id="@+id/tvOverrideTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        android:text="当日调课"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvOverrideDesc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:paddingHorizontal="24dp"
+        android:textSize="13sp"
+        android:lineSpacingExtra="2dp"
+        android:alpha="0.7"
+        android:textColor="?attr/colorOnSurface"
+        tools:text="把 9月20日 周六 临时换成哪天的课表？\n原课表不受影响。" />
+
+    <!-- 选项列表（动态填充） -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:maxHeight="380dp">
+
+        <LinearLayout
+            android:id="@+id/overrideOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
+
+</LinearLayout>
