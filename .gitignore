@@ -52,3 +52,9 @@ hs_err_pid*
 
 # ===== 编辑备份归档（开发期临时产物，不属于项目源码）=====
 docs/_archived_schedule_view/
+# ===== 教务对接技术文档（含 CAS 地址 / RSA 公钥 / 接口路径）=====
+# ⚠️ 绝对禁止提交：这些细节被公开会带来风控与安全风险。
+#    本地档案另存于项目外：C:\Users\34356\dev\Notes\ScheduleApp\
+docs/应用与功能说明书.md
+docs/教务*
+docs/*对接*
