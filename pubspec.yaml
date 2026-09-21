@@ -1,0 +1,60 @@
+name: gzuschedule
+description: "广软课程表 —— 广州软件学院学生课表 App（Flutter 版）"
+publish_to: 'none'
+
+version: 1.2.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # ---------- 状态管理 ----------
+  # 说明书 §11.1 推荐 riverpod
+  flutter_riverpod: ^2.6.1
+
+  # ---------- 本地存储 ----------
+  # 对应 Room（说明书 §11.1：drift 类型安全，更接近 Room）
+  drift: ^2.20.0
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.5
+  path: ^1.9.0
+
+  # SharedPreferences（对应原版各设置项 Store）
+  shared_preferences: ^2.3.3
+
+  # ---------- 网络 ----------
+  # 对应 OkHttp + CookieJar（说明书 §11.1）
+  http: ^1.2.2
+  dio: ^5.7.0
+  dio_cookie_manager: ^3.1.1
+  cookie_jar: ^4.0.8
+
+  # ---------- 液态玻璃效果 ----------
+  # iOS 26-style liquid glass widgets for Flutter
+  # Built on a custom fragment shader for real blur, liquid interactions,
+  # specular highlights, and chromatic aberration
+  liquid_glass_widgets: ^1.7.0
+
+  # ---------- 其他 ----------
+  image_picker: ^1.1.2      # 头像选择（对应 uCrop 那一环）
+  url_launcher: ^6.3.1      # 检查更新跳浏览器
+  package_info_plus: ^8.1.2 # 读版本号
+  intl: ^0.19.0             # 日期格式化
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.20.0
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/

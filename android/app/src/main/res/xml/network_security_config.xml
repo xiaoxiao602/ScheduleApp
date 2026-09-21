@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  网络安全配置（ADR-010，Flutter 移植版）。
+
+  ⚠️ 为什么需要它：
+  正方教务的登录跳转链中，服务端会把 302 降级为【明文 http://】：
+      https://jwxt.gzus.edu.cn/sso/lyiotlogin?ticket=ST-..
+        -> 302 http://jwxt.gzus.edu.cn/jwglxt/ticketlogin?...
+        -> 302 http://jwxt.gzus.edu.cn/jwglxt/xtgl/index_initMenu.html
+  而 Android 9+ 默认禁止明文流量，导致：
+      CLEARTEXT communication to jwxt.gzus.edu.cn not permitted by network security policy
+
+  决策：**只对学校这几个域名**放行明文，其余一律禁止（保持默认安全）。
+-->
+<network-security-config>
+
+    <!-- 默认：禁止明文（保持安全基线） -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- 校方域名：允许明文（服务端 302 会降级到 http） -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">gzus.edu.cn</domain>
+    </domain-config>
+
+</network-security-config>

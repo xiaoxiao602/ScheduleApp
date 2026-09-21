@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modify this file to customize your launch splash screen -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- ⚠️ 2026-09：原来是 @android:color/white（冷启动白闪），
+         改为 @color/launch_bg（浅色 #E5E9F1 / 深色 #0B0D10，
+         随 values-night 自动切换）。 -->
+    <item android:drawable="@color/launch_bg" />
+
+    <!-- You can insert your own image assets here -->
+    <!-- <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/launch_image" />
+    </item> -->
+</layer-list>

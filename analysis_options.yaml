@@ -1,0 +1,40 @@
+# This file configures the analyzer, which statically analyzes Dart code to
+# check for errors, warnings, and lints.
+#
+# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
+# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
+# invoked from the command line by running `flutter analyze`.
+
+# The following line activates a set of recommended lints for Flutter apps,
+# packages, and plugins designed to encourage good coding practices.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - windows/**
+
+linter:
+  # The lint rules applied to this project can be customized in the
+  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
+  # included above or to enable additional rules. A list of all available lints
+  # and their documentation is published at https://dart.dev/lints.
+  #
+  # Instead of disabling a lint rule for the entire project in the
+  # section below, it can also be suppressed for a single line of code
+  # or a specific dart file by using the `// ignore: name_of_lint` and
+  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
+  # producing the lint.
+  rules:
+    # ⚠️ 刻意保留 SCREAMING_CASE 常量名：
+    #    本项目是原 Android(Kotlin) 版的一比一移植，Kotlin 侧常量写作
+    #    DEF_HEIGHT / MIN_HEIGHT / MAX_DAMPING 等。保持同名同形，
+    #    便于对照源码、避免移植时张冠李戴。故关闭该风格规则。
+    constant_identifier_names: false
+    # 移植过程中大量中文注释引用原 Kotlin 代码，保留字符串插值花括号写法
+    # 以免与 Kotlin 的 ${x} 形式混淆。
+    unnecessary_brace_in_string_interps: false
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options

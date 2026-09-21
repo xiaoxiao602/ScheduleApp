@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  自适应图标背景色。
+  原版（ScheduleApp）用白底 + 校徽前景，这里保持一致。
+  引用方：mipmap-anydpi-v26/ic_launcher.xml
+-->
+<resources>
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 启动闪屏底色 —— 与 App scaffold 背景色保持一致（2026-09）：
+         冷启动时窗口先于 Flutter 第一帧显示，用默认白底会有一下白闪，
+         改成 AppColors.surface(#E5E9F1) 后启动观感是"无缝进入"。 -->
+    <color name="launch_bg">#FFE5E9F1</color>
+</resources>
