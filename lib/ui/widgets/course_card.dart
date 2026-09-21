@@ -88,42 +88,51 @@ class CourseCard extends ConsumerWidget {
                 // ⚠️ 用户要求「上课起始时间和结束时间移动到左侧」——
                 //    左侧一列完整交代"第几节、几点到几点"，
                 //    右侧就只剩课程内容本身（名称 / 地点 / 教师）。
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${course.startPeriod}-${course.endPeriod}节',
-                      style: TextStyle(
-                        fontSize: 13, // 原版 tvPeriod 13sp
-                        fontWeight: FontWeight.bold,
-                        color: c.primary,
+                //
+                // ⚠️⚠️ 2026-09-22 修 bug：「第一个课程的分割线和文字位置怎么
+                //    和下面的不一样」——根因是本列宽度随文字走（"3-4节" 比
+                //    "13-14节" 窄 13dp）⇒ 竖分隔线和右侧整块文字逐卡左右漂移。
+                //    原版 item_course.xml 用 android:minWidth="52dp" 钉住这一列，
+                //    这里补齐同款约束（实测内容最宽 48.3dp < 52dp，故各卡列宽恒定）。
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 52),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${course.startPeriod}-${course.endPeriod}节',
+                        style: TextStyle(
+                          fontSize: 13, // 原版 tvPeriod 13sp
+                          fontWeight: FontWeight.bold,
+                          color: c.primary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      start,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: c.onSurface,
+                      const SizedBox(height: 2),
+                      Text(
+                        start,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: c.onSurface,
+                        ),
                       ),
-                    ),
-                    // 起止之间的短竖线（视觉上"到"的意思）
-                    Container(
-                      width: 1,
-                      height: 8,
-                      margin: const EdgeInsets.symmetric(vertical: 1),
-                      color: c.outlineVariant,
-                    ),
-                    Text(
-                      end,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: c.onSurfaceVariant,
+                      // 起止之间的短竖线（视觉上"到"的意思）
+                      Container(
+                        width: 1,
+                        height: 8,
+                        margin: const EdgeInsets.symmetric(vertical: 1),
+                        color: c.outlineVariant,
                       ),
-                    ),
-                  ],
+                      Text(
+                        end,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: c.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 14), // 原版 layout_marginEnd=14dp
                 // ---------- 竖分隔线 1dp × 36dp ----------
