@@ -24,7 +24,7 @@
         android:maxSdkVersion="32"/>
 
     <application
-        android:label="广软课程表 Flutter"
+        android:label="广软课程表"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"

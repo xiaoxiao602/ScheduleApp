@@ -549,7 +549,7 @@ final LiquidGlassSettings kDockGlassSettings = LiquidGlassSettings(
   lightIntensity: 2.0,
   lightAngle: 60.0,
   thickness: 35,
-  chromaticAberration: 0.1,
+  chromaticAberration: 0.2,
   refractiveIndex: 1.25,
   ambientStrength: 0.5,
   saturation: 1.4,
