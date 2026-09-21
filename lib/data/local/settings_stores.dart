@@ -219,8 +219,8 @@ class DockTuning {
   static const int MIN_GLASS_THICKNESS = 0;
   static const int MAX_GLASS_THICKNESS = 60;
 
-  /// 色散（×0.1）—— 3 = 0.3（用户定档；6 = 0.6 太艳）。
-  static const int DEF_GLASS_CHROMA = 3;
+  /// 色散（×0.1）—— 1 = 0.1（用户 2026-09-22 定档：更克制）。
+  static const int DEF_GLASS_CHROMA = 1;
   static const int MIN_GLASS_CHROMA = 0;
   static const int MAX_GLASS_CHROMA = 20;
 
