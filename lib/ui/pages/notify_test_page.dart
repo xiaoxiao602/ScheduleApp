@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../data/notify/island_bridge.dart';
 import '../../data/notify/notify_service.dart';
 import '../theme.dart';
 
@@ -247,76 +246,9 @@ class _NotifyTestPageState extends State<NotifyTestPage> {
             },
             child: const Text('查看推送日志'),
           ),
-          const SizedBox(height: 20),
-          // ---- 超级岛 A/B 实验（路线①探针）----
-          Text('超级岛 A/B 实验（+15 探针）',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colors.onSurface)),
-          const SizedBox(height: 4),
-          Text(
-            '同内容两条通知：A = 带 miui.focus.param 岛参数（原生构造），B = 普通通知。\n'
-            '对比两条在你手机上的呈现（哪条上岛/模块转换样式/锁屏形态），'
-            '结果决定正式三阶段岛模板怎么写。',
-            style: TextStyle(
-                fontSize: 11,
-                color: colors.onSurface.withValues(alpha: 0.6)),
-          ),
-          const SizedBox(height: 8),
-          _TestCard(
-            title: 'A · 岛参数通知',
-            desc: '带 miui.focus.param（快上课/上课中/已下课 文本模板）+ 秒表倒计时',
-            onSend: () => _islandProbe(true),
-            onClear: () => IslandBridge.cancel(9101),
-          ),
-          const SizedBox(height: 12),
-          _TestCard(
-            title: 'B · 普通通知（对照组）',
-            desc: '同内容但不带岛参数 —— 观察模块会不会把它转成岛',
-            onSend: () => _islandProbe(false),
-            onClear: () => IslandBridge.cancel(9102),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () {
-              IslandBridge.cancel(9101);
-              IslandBridge.cancel(9102);
-              _toast('已清除 A/B 实验通知');
-            },
-            child: const Text('清除 A/B 实验通知'),
-          ),
         ],
       ),
     );
-  }
-
-  /// A/B 探针：id 9101（带岛参数）/ 9102（普通）。
-  Future<void> _islandProbe(bool island) async {
-    final now = DateTime.now();
-    final end = now.add(const Duration(minutes: 45));
-    try {
-      await IslandBridge.show(
-        id: island ? 9101 : 9102,
-        title: '高等数学 · A301',
-        body: '上课中 · 距下课',
-        whenMs: end.millisecondsSinceEpoch,
-        chronoDown: true,
-        hasProgress: true,
-        progress: 35,
-        lowChannel: false,
-        island: island,
-        stage: 'in',
-        ticker: '上课中 高数',
-        aodTitle: '高数 A301',
-        bigTitle: '高等数学',
-        bigContent: 'A301 · 上课中',
-        bigFoot: '距下课 45:00',
-      );
-      _toast(island ? '已发送 A（岛参数）' : '已发送 B（普通对照）');
-    } catch (e) {
-      _toast('❌ 发送失败：$e');
-    }
   }
 
   static String _statusLine(String label, bool? ok) {

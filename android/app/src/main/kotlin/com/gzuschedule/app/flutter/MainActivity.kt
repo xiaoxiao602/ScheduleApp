@@ -37,12 +37,9 @@ class MainActivity : FlutterActivity() {
     //    强度 <100 时用 Vibrator 补一个 8ms 短振（振幅按比例）——
     //    与原版 Haptics.amplify 逐行对齐。
     private val hapticChannel = "gzuschedule/haptic"
-    private lateinit var islandChannel: IslandChannel
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        islandChannel = IslandChannel(applicationContext)
-        islandChannel.register(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, hapticChannel)
             .setMethodCallHandler { call, result ->
                 if (call.method == "perform") {
