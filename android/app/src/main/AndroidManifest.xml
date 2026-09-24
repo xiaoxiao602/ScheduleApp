@@ -9,6 +9,16 @@
       普通权限，安装时不弹窗。
     -->
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!--
+      1.2.1 上课提醒/常驻倒计时（方案 E）。
+      USE_EXACT_ALARM：提醒类 App 的精确唤醒（闹钟语义）；
+      SCHEDULE_EXACT_ALARM：Android 12+ 兜底。
+      RECEIVE_BOOT_COMPLETED：开机后重排提醒（闹钟插件 rescheduleOnReboot 用）。
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <!--
       头像选择（image_picker）需要的权限。

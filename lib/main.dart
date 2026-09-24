@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'ui/pages/login_page.dart';
 import 'ui/pages/schedule_page.dart';
 import 'ui/pages/settings_page.dart';
+import 'data/notify/notify_service.dart';
+import 'domain/haptic_engine.dart';
+import 'ui/widgets/edge_haptic.dart';
 import 'ui/motion.dart';
 import 'ui/pages/today_page.dart';
 import 'ui/providers.dart';
@@ -19,6 +21,10 @@ import 'ui/widget/liquid_glass_dock.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LiquidGlassWidgets.initialize(); // 预热液态玻璃 shader
+
+  // 1.2.1 推送/提醒（方案 E）：初始化渠道与回调，启动即排程。
+  await NotifyService.instance.init();
+  NotifyService.instance.reschedule();
 
   runApp(
     LiquidGlassWidgets.wrap(
@@ -43,13 +49,15 @@ class GzuScheduleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '广软课程表',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system, // 跟随系统（原版行为）
-      home: const AppRoot(),
+    return EdgeHapticScope(
+      child: MaterialApp(
+        title: '广软课程表',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeMode.system, // 跟随系统（原版行为）
+        home: const AppRoot(),
+      ),
     );
   }
 }
@@ -231,10 +239,14 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   /// 切页触感（受「触感反馈」设置控制）。
+  ///
+  /// ⚠️ +13 修复：之前写死 selectionClick() —— 风格设置在主页完全无效
+  ///    （用户反馈「切换之后回到主页还是原来的效果」）。
+  ///    现在走 HapticEngine（风格 → 原生 HapticFeedbackConstants）。
   void _haptic() {
     final cfg = ref.read(hapticConfigProvider).valueOrNull;
     if (cfg == null || !cfg.enabled || !cfg.onTab) return;
-    HapticFeedback.selectionClick();
+    HapticEngine.play(style: cfg.style, strength: cfg.strength);
   }
 
   @override

@@ -2,7 +2,7 @@ name: gzuschedule
 description: "广软课程表 —— 广州软件学院学生课表 App（Flutter 版）"
 publish_to: 'none'
 
-version: 1.2.0+1
+version: 1.2.1+26
 
 environment:
   sdk: ^3.13.4
@@ -40,11 +40,14 @@ dependencies:
   # specular highlights, and chromatic aberration
   liquid_glass_widgets: ^1.7.0
 
+  # ---------- 通知/提醒（方案 E：自研常驻倒计时通知）----------
+  flutter_local_notifications: ^22.2.0   # 划掉回调（dismissIsolate）需 22.2.0+
+  android_alarm_manager_plus: ^5.1.0     # 自链式闹钟：15 秒 tick + 阶段切换
+
   # ---------- 其他 ----------
   image_picker: ^1.1.2      # 头像选择（对应 uCrop 那一环）
   url_launcher: ^6.3.1      # 检查更新跳浏览器
   package_info_plus: ^8.1.2 # 读版本号
-  intl: ^0.19.0             # 日期格式化
 
 dev_dependencies:
   flutter_test:

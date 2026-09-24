@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/settings_stores.dart'
     show HapticConfig, HapticStyle;
+import '../../domain/haptic_engine.dart';
 import '../providers.dart';
 import '../theme.dart';
 
@@ -232,26 +232,12 @@ class _Body extends ConsumerWidget {
 
   /// 试一下 —— 按当前配置触发一次震动。
   ///
-  /// ⚠️ Flutter 内置 HapticFeedback 只有 5 种常量
-  ///    （lightImpact/mediumImpact/heavyImpact/selectionClick/vibrate），
-  ///    缺 CLOCK_TICK 等 —— 完整复刻需 PlatformChannel。
-  ///    这里先按风格映射到最接近的内置效果。
+  /// ⚠️ +13 修复（对齐原版 Haptics.preview）：
+  ///    · 风格走原生 HapticFeedbackConstants（之前 3 个风格撞同一效果）；
+  ///    · **无视 enabled 总开关**（否则关掉后永远试不出效果）；
+  ///    · 强度 <100 由原生 Vibrator 振幅缩放。
   static Future<void> _preview(HapticConfig cfg) async {
-    if (!cfg.enabled) return;
-    switch (cfg.style) {
-      case HapticStyle.clockTick:
-        await HapticFeedback.selectionClick();
-      case HapticStyle.virtualKey:
-        await HapticFeedback.lightImpact();
-      case HapticStyle.keyboardTap:
-        await HapticFeedback.selectionClick();
-      case HapticStyle.textHandleMove:
-        await HapticFeedback.selectionClick();
-      case HapticStyle.contextClick:
-        await HapticFeedback.mediumImpact();
-      case HapticStyle.longPress:
-        await HapticFeedback.heavyImpact();
-    }
+    await HapticEngine.play(style: cfg.style, strength: cfg.strength);
   }
 }
 

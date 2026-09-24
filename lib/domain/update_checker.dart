@@ -46,9 +46,9 @@ class UpdateInfo {
 }
 
 abstract final class UpdateChecker {
-  /// ⚠️ 改成你的仓库坐标。
+  /// 仓库坐标（仓库已更名 ScheduleApp-GZUS；旧名 ScheduleApp 靠 301 跳转仍可用）
   static const owner = 'xiaoxiao602';
-  static const repo = 'ScheduleApp';
+  static const repo = 'ScheduleApp-GZUS';
 
   static Uri get _api =>
       Uri.parse('https://api.github.com/repos/$owner/$repo/releases/latest');

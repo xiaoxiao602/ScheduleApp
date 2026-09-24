@@ -593,3 +593,119 @@ class UpdatePrefs {
     await sp.setBool(_kAutoCheck, v);
   }
 }
+
+// ============================================================
+// 推送/提醒设置（1.2.1 方案 E：自研常驻倒计时通知）
+// ============================================================
+
+/// 推送开关配置。
+///
+/// ⚠️ 持久化 8 处同步纪律（add-persisted-settings-field 技能）：
+///    字段声明 + 构造参数 + copyWith 参数列表 + copyWith 构造调用
+///    + store key + load + save + resetAll —— 漏任何一处都是静默失败。
+@immutable
+class NotifyPrefs {
+  const NotifyPrefs({
+    this.enabled = true,
+    this.remindOn = true,
+    this.countdownOn = true,
+    this.afterOn = true,
+    this.leadMinutes = 30,
+  });
+
+  /// 总开关。
+  final bool enabled;
+
+  /// 上课提醒（T-lead 铃声）。
+  final bool remindOn;
+
+  /// 常驻倒计时（课前/上课中软常驻通知）。
+  final bool countdownOn;
+
+  /// 已下课提示。
+  final bool afterOn;
+
+  /// 提前量（分钟，5..120；默认 30，用户拍板）。
+  final int leadMinutes;
+
+  NotifyPrefs copyWith({
+    bool? enabled,
+    bool? remindOn,
+    bool? countdownOn,
+    bool? afterOn,
+    int? leadMinutes,
+  }) {
+    final lm = leadMinutes ?? this.leadMinutes;
+    return NotifyPrefs(
+      enabled: enabled ?? this.enabled,
+      remindOn: remindOn ?? this.remindOn,
+      countdownOn: countdownOn ?? this.countdownOn,
+      afterOn: afterOn ?? this.afterOn,
+      leadMinutes: lm < 5 ? 5 : (lm > 120 ? 120 : lm),
+    );
+  }
+}
+
+/// 推送设置 Store + 运行时状态（阶段跟踪 / 「结束显示」抑制）。
+class NotifyStore {
+  static const _kEnabled = 'notify_enabled';
+  static const _kRemindOn = 'notify_remind_on';
+  static const _kCountdownOn = 'notify_countdown_on';
+  static const _kAfterOn = 'notify_after_on';
+  static const _kLeadMinutes = 'notify_lead_minutes';
+  static const _kStage = 'notify_stage_state';
+  static const _kSuppressPrefix = 'notify_suppress_';
+
+  Future<NotifyPrefs> load() async {
+    final sp = await SharedPreferences.getInstance();
+    return NotifyPrefs(
+      enabled: sp.getBool(_kEnabled) ?? true,
+      remindOn: sp.getBool(_kRemindOn) ?? true,
+      countdownOn: sp.getBool(_kCountdownOn) ?? true,
+      afterOn: sp.getBool(_kAfterOn) ?? true,
+      leadMinutes: sp.getInt(_kLeadMinutes) ?? 30,
+    ).copyWith();
+  }
+
+  Future<void> save(NotifyPrefs c) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setBool(_kEnabled, c.enabled);
+    await sp.setBool(_kRemindOn, c.remindOn);
+    await sp.setBool(_kCountdownOn, c.countdownOn);
+    await sp.setBool(_kAfterOn, c.afterOn);
+    await sp.setInt(_kLeadMinutes, c.leadMinutes);
+  }
+
+  Future<void> resetAll() async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove(_kEnabled);
+    await sp.remove(_kRemindOn);
+    await sp.remove(_kCountdownOn);
+    await sp.remove(_kAfterOn);
+    await sp.remove(_kLeadMinutes);
+  }
+
+  // ---------- 运行时状态（非用户设置）----------
+
+  /// 当前阶段标记（"stage|momentKey"），用于判断「首次进入」（响铃）vs 更新（静默）。
+  Future<String?> loadStage() async {
+    final sp = await SharedPreferences.getInstance();
+    return sp.getString(_kStage);
+  }
+
+  Future<void> saveStage(String v) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString(_kStage, v);
+  }
+
+  /// 「结束显示」抑制：本节课不再重推/显示。
+  Future<bool> isSuppressed(String momentKey) async {
+    final sp = await SharedPreferences.getInstance();
+    return sp.getBool('$_kSuppressPrefix$momentKey') ?? false;
+  }
+
+  Future<void> suppress(String momentKey) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setBool('$_kSuppressPrefix$momentKey', true);
+  }
+}

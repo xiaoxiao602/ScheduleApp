@@ -387,5 +387,25 @@ final userProfileProvider = FutureProvider<String?>((ref) async {
   return ref.watch(userProfileStoreProvider).loadDisplayName();
 });
 
+/// 推送/提醒设置（1.2.1 方案 E）。
+final notifyStoreProvider = Provider((ref) => NotifyStore());
+
+final notifyPrefsProvider =
+    AsyncNotifierProvider<NotifyPrefsNotifier, NotifyPrefs>(
+        NotifyPrefsNotifier.new);
+
+class NotifyPrefsNotifier extends AsyncNotifier<NotifyPrefs> {
+  @override
+  Future<NotifyPrefs> build() async {
+    return ref.watch(notifyStoreProvider).load();
+  }
+
+  /// ⚠️ 顺序（DockTuning 同款教训）：先落盘再换 state，防 build() 旧值覆盖。
+  Future<void> apply(NotifyPrefs p) async {
+    await ref.read(notifyStoreProvider).save(p);
+    state = AsyncData(p);
+  }
+}
+
 /// 数据库连接（供测试注入内存库）。
 typedef DbOverride = DatabaseConnection;

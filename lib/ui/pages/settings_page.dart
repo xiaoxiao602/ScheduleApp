@@ -15,6 +15,8 @@ import 'dock_tuning_page.dart';
 import 'haptic_page.dart';
 import 'list_pages.dart';
 import 'login_page.dart';
+import 'notify_page.dart';
+import 'notify_test_page.dart';
 import '../widgets/dialogs.dart';
 import '../widgets/status_bar_blur.dart';
 
@@ -170,11 +172,32 @@ class SettingsPage extends ConsumerWidget {
               title: '触感反馈',
               trailing: const Icon(Icons.chevron_right_rounded, size: 20),
               onTap: () => _openHaptic(context),
-            ),
-          ]),
-          const SizedBox(height: 18),
+              ),
+              ]),
+              const SizedBox(height: 18),
 
-          // ---- 数据管理 ----
+              // ---- 通知（1.2.1 方案 E）----
+              _SectionLabel('通知'),
+              _Section(children: [
+              _Row(
+                icon: Icons.notifications_active_outlined,
+                title: '上课提醒',
+                subtitle: '课前铃声 · 常驻倒计时 · 已下课',
+                trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                onTap: () => _openNotify(context),
+              ),
+              const Divider(height: 1),
+              _Row(
+                icon: Icons.science_outlined,
+                title: '推送测试',
+                subtitle: '逐类触发通知试效果',
+                trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                onTap: () => _openNotifyTest(context),
+              ),
+              ]),
+              const SizedBox(height: 18),
+
+              // ---- 数据管理 ----
           _SectionLabel('数据管理'),
           _Section(children: [
             _Row(
@@ -266,6 +289,18 @@ class SettingsPage extends ConsumerWidget {
   void _openDockTuning(BuildContext context) {
     Navigator.of(context).push(
       slideRoute(const DockTuningPage()),
+    );
+  }
+
+  void _openNotify(BuildContext context) {
+    Navigator.of(context).push(
+      slideRoute(const NotifyPage()),
+    );
+  }
+
+  void _openNotifyTest(BuildContext context) {
+    Navigator.of(context).push(
+      slideRoute(const NotifyTestPage()),
     );
   }
 
