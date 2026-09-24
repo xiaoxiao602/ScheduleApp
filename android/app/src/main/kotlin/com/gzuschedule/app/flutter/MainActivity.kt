@@ -38,14 +38,11 @@ class MainActivity : FlutterActivity() {
     //    与原版 Haptics.amplify 逐行对齐。
     private val hapticChannel = "gzuschedule/haptic"
     private lateinit var islandChannel: IslandChannel
-    private lateinit var alarmScheduler: AlarmScheduler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         islandChannel = IslandChannel(applicationContext)
         islandChannel.register(flutterEngine)
-        alarmScheduler = AlarmScheduler(applicationContext)
-        alarmScheduler.register(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, hapticChannel)
             .setMethodCallHandler { call, result ->
                 if (call.method == "perform") {

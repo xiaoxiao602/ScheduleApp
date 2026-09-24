@@ -2,7 +2,7 @@ name: gzuschedule
 description: "广软课程表 —— 广州软件学院学生课表 App（Flutter 版）"
 publish_to: 'none'
 
-version: 1.2.1+27
+version: 1.2.1+28
 
 environment:
   sdk: ^3.13.4

@@ -436,17 +436,17 @@ class NotifyService {
       ],
       dismissIsolate: NotificationDismissedIsolate.background,
     );
-    await _post(
-      id: idClass,
-      // ⚠️ 用户拍板（+18/19）：不带教室号、不写「上课中」——
-      //    课程名 + 距下课时间（分钟制，不显示秒）。
-      // ⚠️ +26 诊断实验：附发帖时间戳 —— 时间戳在变=系统渲染正常（锅在岛），
-      //    冻住=系统丢更新。定位后移除。
-      title: m.course.name,
-      body: '距下课 ${TimeFormats.hoursMinutes(m.end.difference(now).inMinutes)} · ${_hms(now)}',
-      details: details,
-      forceNew: forceNew,
-    );
+      await _post(
+        id: idClass,
+        // ⚠️ 用户拍板（+18/19）：不带教室号、不写「上课中」——
+        //    课程名 + 距下课时间（分钟制，不显示秒）。
+        // ⚠️ +28：剩余分钟用 ceil（与测试 3 一致）——floor 会在临下课
+        //    不足 1 分钟时显示「0分钟」。
+        title: m.course.name,
+        body: '距下课 ${TimeFormats.hoursMinutes((m.end.difference(now).inSeconds / 60).ceil())}',
+        details: details,
+        forceNew: forceNew,
+      );
   }
 
   Future<void> _showAfter(CourseMoment m, List<CourseMoment> ms, DateTime now,
@@ -785,7 +785,7 @@ class NotifyService {
       id: _idTestBase + 3,
       title: '高等数学',
       body: leftSeconds > 0
-          ? '距下课 ${TimeFormats.hoursMinutes((leftSeconds / 60).ceil())} · ${_hms(now)}'
+          ? '距下课 ${TimeFormats.hoursMinutes((leftSeconds / 60).ceil())}'
           : '已下课',
       details: details,
       forceNew: false, // 同 id 更新（不闪断，且能复活被划掉的）
@@ -864,8 +864,4 @@ class NotifyService {
 
   static String _hm(DateTime d) =>
       '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-
-  /// 诊断用时间戳（+26）：发帖时刻 HH:mm:ss —— 正文可见即证明更新已渲染。
-  static String _hms(DateTime d) =>
-      '${_hm(d)}:${d.second.toString().padLeft(2, '0')}';
 }
