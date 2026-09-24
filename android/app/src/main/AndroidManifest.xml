@@ -62,6 +62,29 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!--
+          android_alarm_manager_plus 组件声明（1.2.1 后台断更的根因修复）。
+          ⚠️ 插件 AAR 的 manifest 是空的，service/receiver 必须由宿主声明（插件 README Setup 第 3 步）。
+          +10~+26 全部测试包都漏了这三件 → 闹钟正常触发，但广播指向未注册的 receiver，
+          被系统静默丢弃 → 后台 isolate 永远不会被拉起 → 通知链路一进后台就断。
+          RebootBroadcastReceiver 的 enabled="false" 是插件约定：rescheduleOnReboot
+          排程时由插件用 setComponentEnabledSetting 动态启用。
+        -->
+        <service
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <receiver
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmBroadcastReceiver"
+            android:exported="false"/>
+        <receiver
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.RebootBroadcastReceiver"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
