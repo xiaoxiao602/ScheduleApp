@@ -292,16 +292,17 @@ class NotifyService {
       }
     }
 
-    // tick：课前/上课中显示期间每 15 秒刷新（+19 用户拍板分钟制后定档）。
+    // tick：课前/上课中显示期间**每分钟一跳**（+29 用户最终定档）。
     // ⚠️ 双重职责：show(同 id) 会把被划掉的通知**重新拉起** —— tick 即重推看门狗。
-    // ⚠️ 为什么 15s：每秒刷新疑似被系统限流（60 秒实验刷 7 次即冻结）；
-    //    分钟制文本 + 15s 刷新既省电又碰不到限流。
-    // ⚠️ 秒级「活」感靠系统秒表（Chronometer，系统渲染零刷新）——
-    //    +19 曾按「不显示秒」移除，结果通知/岛完全静止（用户报「不会更新」），+20 回归。
+    // ⚠️ +29 对齐分钟边界 +3s：正文/进度条都是分钟粒度，整分翻面后 3 秒内文案即更新；
+    //    秒级「活」感由系统秒表（Chronometer）渲染，零刷新成本。
+    //    （15s 档经实测可行但无必要；每秒刷新已被 +16 实验证伪，勿再试。）
+    // ⚠️ 无活跃课时这里不排 tick → 课间/放学后后台零唤醒（省电关键）。
     // ⚠️ Doze 深睡时 setExact 可能被系统按维护窗口推迟 —— 醒屏下准时。
     final act = ReminderEngine.activeOf(ms, now);
     if (act != null && prefs.countdownOn && !await _store.isSuppressed(act.key)) {
-      final tick = now.add(const Duration(seconds: 15));
+      final tick =
+          DateTime(now.year, now.month, now.day, now.hour, now.minute + 1, 3);
       next = minOf(next, tick);
     }
 
@@ -731,8 +732,10 @@ class NotifyService {
   }
 
   Future<void> _scheduleTestTick(int total, DateTime end) {
+    final now = DateTime.now();
     return AndroidAlarmManager.oneShotAt(
-      DateTime.now().add(const Duration(seconds: 15)),
+      // 与生产链同节奏（+29 定档每分钟一跳，对齐分钟边界 +3s）。
+      DateTime(now.year, now.month, now.day, now.hour, now.minute + 1, 3),
       _testAlarmId,
       notifyTestTickAlarm,
       exact: true,
@@ -814,39 +817,40 @@ class NotifyService {
   // 数据装载（后台 isolate 内独立开库；本地库是唯一数据源）
   // ============================================================
 
+  /// 缓存的 DB 连接（每 isolate 一个）。+29 前每次 tick 都开/关一次库，
+  /// 后台 isolate 常驻期间纯属浪费 —— 改为懒加载复用，进程退出自然回收。
+  /// （多 isolate 各持连接与现状一致：读多写少，写冲突由调用方 try/catch 自愈。）
+  static AppDatabase? _cachedDb;
+
   Future<List<CourseMoment>> _loadMoments(
       DateTime now, NotifyPrefs prefs) async {
-    final db = AppDatabase();
-    try {
-      final meta = await MetaRepository(db).getAll();
-      final term = meta[MetaKeys.currentTerm];
-      final fmRaw = meta[MetaKeys.firstMonday];
-      if (term == null || term.isEmpty || fmRaw == null || fmRaw.isEmpty) {
-        return const [];
-      }
-      final fm = TimeFormats.parseIso(fmRaw);
-      if (fm == null) return const [];
-      final holidayRaw = meta[MetaKeys.holidays] ?? '';
-      final holidays = holidayRaw.isEmpty
-          ? const <HolidayRange>[]
-          : HolidayCalendar.fromJson(holidayRaw);
-
-      final courses = await CourseRepository(db).observeByTerm(term).first;
-      final overrides = await DayOverrideRepository(db).observeAll().first;
-
-      final res = <CourseMoment>[];
-      for (final offset in [0, 1]) {
-        final date = DateTime(now.year, now.month, now.day + offset);
-        if (holidays.any((h) => h.contains(date))) continue;
-        final week = WeekCalculator.weekOf(fm, date);
-        final day = ReminderEngine.dayCoursesOf(courses, overrides, date, week);
-        res.addAll(
-            ReminderEngine.momentsOfDay(day, date, leadMinutes: prefs.leadMinutes));
-      }
-      return res;
-    } finally {
-      await db.close();
+    final db = _cachedDb ??= AppDatabase();
+    final meta = await MetaRepository(db).getAll();
+    final term = meta[MetaKeys.currentTerm];
+    final fmRaw = meta[MetaKeys.firstMonday];
+    if (term == null || term.isEmpty || fmRaw == null || fmRaw.isEmpty) {
+      return const [];
     }
+    final fm = TimeFormats.parseIso(fmRaw);
+    if (fm == null) return const [];
+    final holidayRaw = meta[MetaKeys.holidays] ?? '';
+    final holidays = holidayRaw.isEmpty
+        ? const <HolidayRange>[]
+        : HolidayCalendar.fromJson(holidayRaw);
+
+    final courses = await CourseRepository(db).observeByTerm(term).first;
+    final overrides = await DayOverrideRepository(db).observeAll().first;
+
+    final res = <CourseMoment>[];
+    for (final offset in [0, 1]) {
+      final date = DateTime(now.year, now.month, now.day + offset);
+      if (holidays.any((h) => h.contains(date))) continue;
+      final week = WeekCalculator.weekOf(fm, date);
+      final day = ReminderEngine.dayCoursesOf(courses, overrides, date, week);
+      res.addAll(
+          ReminderEngine.momentsOfDay(day, date, leadMinutes: prefs.leadMinutes));
+    }
+    return res;
   }
 
   /// 读取落盘日志（测试页「查看日志」用）。

@@ -84,7 +84,7 @@ class _NotifyTestPageState extends State<NotifyTestPage> {
     if (n == 3) {
       // 5 分钟倒计时（15 秒刷新）—— 用户设计的「是否能一直显示」实验。
       _startCountdown60();
-      _toast('已发送：5 分钟倒计时（15 秒刷新）');
+      _toast('已发送：5 分钟倒计时（60 秒刷新）');
       _watched.add(n);
       await _refreshStatus();
       return;
@@ -331,7 +331,7 @@ class _NotifyTestPageState extends State<NotifyTestPage> {
       case 2:
         return '课前通知：课程名 + 地点 + 时间（无进度条）';
       case 3:
-        return '5 分钟倒计时（15 秒刷新）—— 看岛/通知会不会中途自己关';
+        return '5 分钟倒计时（60 秒刷新）—— 看岛/通知会不会中途自己关';
       case 4:
         return '下课收尾：显示「已下课」';
       case 5:
