@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
@@ -53,6 +54,15 @@ class GzuScheduleApp extends StatelessWidget {
       child: MaterialApp(
         title: '广软课程表',
         debugShowCheckedModeBanner: false,
+        // 中文本地化（+30）：Material 日历（showDatePicker）等系统组件
+        // 不配委托时默认英文 —— App 全中文，直接锁 zh_CN。
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('zh', 'CN')],
+        locale: const Locale('zh', 'CN'),
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: ThemeMode.system, // 跟随系统（原版行为）
